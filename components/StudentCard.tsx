@@ -30,9 +30,9 @@ export function StudentCard({ user, onConnect, connectionStatus = 'none' }: Stud
 
                 <div className="space-y-1">
                     <Link href={`/profile/${user.id}`} className="hover:underline">
-                        <h3 className="font-bold text-lg">{user.name}</h3>
+                        <h3 className="font-bold text-lg text-gray-900">{user.name}</h3>
                     </Link>
-                    <p className="text-sm text-gray-500 font-medium">
+                    <p className="text-sm text-gray-700 font-medium">
                         {user.college === 'Unknown' ? 'College N/A' : user.college} • {user.branch === 'Unknown' ? 'Branch N/A' : user.branch} • {user.year}
                     </p>
                     {user.bio && (

@@ -152,8 +152,8 @@ export default function ProfilePage() {
 
                         {!isEditing ? (
                             <div className="text-center">
-                                <h2 className="text-xl font-bold">{user.name}</h2>
-                                <p className="text-sm text-gray-700 font-medium">
+                                <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
+                                <p className="text-sm text-gray-900 font-medium mt-1">
                                     {user.college === 'Unknown' ? 'College not set' : user.college} •
                                     {user.branch === 'Unknown' ? 'Branch not set' : user.branch} •
                                     {user.year}
@@ -211,7 +211,7 @@ export default function ProfilePage() {
                             <label className="text-sm font-bold text-gray-900">Bio</label>
                         </div>
                         {!isEditing ? (
-                            <p className="text-sm text-gray-800 bg-gray-50 p-3 rounded-md border border-gray-100">
+                            <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md border border-gray-200">
                                 {user.bio || 'No bio added yet.'}
                             </p>
                         ) : (
