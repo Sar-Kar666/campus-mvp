@@ -46,6 +46,7 @@ export function FeedPost({ post }: FeedPostProps) {
     const [comments, setComments] = useState<any[]>([]);
     const [newComment, setNewComment] = useState('');
     const [currentUser, setCurrentUser] = useState<any>(null);
+    const [replyingTo, setReplyingTo] = useState<{ id: string; name: string } | null>(null);
 
     useEffect(() => {
         const init = async () => {
@@ -79,12 +80,38 @@ export function FeedPost({ post }: FeedPostProps) {
         e.preventDefault();
         if (!newComment.trim() || !currentUser) return;
 
-        const { comment } = await MockService.addComment(post.id, currentUser.id, newComment);
+        const { comment } = await MockService.addComment(post.id, currentUser.id, newComment, replyingTo?.id);
         if (comment) {
             setComments([...comments, comment]);
             setNewComment('');
+            setReplyingTo(null);
         }
     };
+
+    const rootComments = comments.filter(c => !c.parent_id);
+    const getReplies = (commentId: string) => comments.filter(c => c.parent_id === commentId);
+
+    const CommentItem = ({ comment, isReply = false }: { comment: any, isReply?: boolean }) => (
+        <div className={`flex space-x-3 ${isReply ? 'ml-8 mt-2' : 'mt-4'}`}>
+            <img
+                src={comment.users?.profile_image || `https://ui-avatars.com/api/?name=${comment.users?.name}`}
+                className="w-8 h-8 rounded-full object-cover"
+            />
+            <div className="flex-1">
+                <div className="flex items-baseline space-x-2">
+                    <span className="font-bold text-sm">{comment.users?.name}</span>
+                    <span className="text-xs text-gray-500">{formatDistanceToNow(new Date(comment.created_at))}</span>
+                </div>
+                <p className="text-sm text-gray-800">{comment.content}</p>
+                <button
+                    onClick={() => setReplyingTo({ id: comment.id, name: comment.users?.name })}
+                    className="text-xs text-gray-500 font-semibold mt-1 hover:text-gray-800"
+                >
+                    Reply
+                </button>
+            </div>
+        </div>
+    );
 
     return (
         <div className="bg-white border-b border-gray-100 pb-4 mb-4">
@@ -157,34 +184,33 @@ export function FeedPost({ post }: FeedPostProps) {
                         <DialogTitle className="text-center">Comments</DialogTitle>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-0">
                         {comments.length === 0 ? (
                             <div className="text-center text-gray-500 mt-10">No comments yet.</div>
                         ) : (
-                            comments.map((comment) => (
-                                <div key={comment.id} className="flex space-x-3">
-                                    <img
-                                        src={comment.users?.profile_image || `https://ui-avatars.com/api/?name=${comment.users?.name}`}
-                                        className="w-8 h-8 rounded-full object-cover"
-                                    />
-                                    <div>
-                                        <div className="flex items-baseline space-x-2">
-                                            <span className="font-bold text-sm">{comment.users?.name}</span>
-                                            <span className="text-xs text-gray-500">{formatDistanceToNow(new Date(comment.created_at))}</span>
-                                        </div>
-                                        <p className="text-sm text-gray-800">{comment.content}</p>
-                                    </div>
+                            rootComments.map((comment) => (
+                                <div key={comment.id}>
+                                    <CommentItem comment={comment} />
+                                    {getReplies(comment.id).map(reply => (
+                                        <CommentItem key={reply.id} comment={reply} isReply={true} />
+                                    ))}
                                 </div>
                             ))
                         )}
                     </div>
 
                     <div className="p-3 border-t bg-white">
+                        {replyingTo && (
+                            <div className="flex justify-between items-center px-2 pb-2 text-xs text-gray-500">
+                                <span>Replying to <b>{replyingTo.name}</b></span>
+                                <button onClick={() => setReplyingTo(null)} className="text-black font-bold">Cancel</button>
+                            </div>
+                        )}
                         <form onSubmit={handleCommentSubmit} className="flex items-center space-x-2">
                             <Input
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
-                                placeholder="Add a comment..."
+                                placeholder={replyingTo ? `Reply to ${replyingTo.name}...` : "Add a comment..."}
                                 className="flex-1 border-none focus-visible:ring-0 bg-gray-50"
                             />
                             <Button type="submit" variant="ghost" size="icon" disabled={!newComment.trim()}>
