@@ -17,6 +17,7 @@ import { toast } from "sonner";
 
 import { AuthService } from '@/lib/auth-service';
 import { isGoldenUser } from '@/lib/constants';
+import { compressImage } from '@/lib/utils';
 import { Crown } from 'lucide-react';
 
 const COLLEGES: College[] = ['TIT', 'ICFAI', 'Techno', 'JIS', 'KIIT', 'VIT', 'LPU'];
@@ -156,16 +157,21 @@ export default function ProfilePage() {
         const file = e.target.files?.[0];
         if (!file || !user) return;
 
-        // Optimistic update (optional, but let's wait for upload)
-        const toastId = toast.loading("Uploading image...");
+        const toastId = toast.loading("Compressing & Uploading...");
 
-        const { success, url, error } = await MockService.uploadProfilePicture(user.id, file);
+        try {
+            const compressedFile = await compressImage(file);
+            const { success, url, error } = await MockService.uploadProfilePicture(user.id, compressedFile);
 
-        if (success && url) {
-            setEditForm(prev => ({ ...prev, profile_image: url }));
-            toast.success("Image uploaded!", { id: toastId });
-        } else {
-            toast.error(error || "Failed to upload image", { id: toastId });
+            if (success && url) {
+                setEditForm(prev => ({ ...prev, profile_image: url }));
+                toast.success("Image uploaded!", { id: toastId });
+            } else {
+                toast.error(error || "Failed to upload image", { id: toastId });
+            }
+        } catch (error) {
+            console.error("Compression error:", error);
+            toast.error("Failed to process image", { id: toastId });
         }
     };
 

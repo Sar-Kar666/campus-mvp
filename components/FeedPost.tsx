@@ -110,6 +110,8 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
             <img
                 src={comment.users?.profile_image || `https://ui-avatars.com/api/?name=${comment.users?.name}`}
                 className="w-8 h-8 rounded-full object-cover"
+                loading="lazy"
+                decoding="async"
             />
             <div className="flex-1">
                 <div className="bg-gray-100 p-3 rounded-lg rounded-tl-none">
@@ -137,6 +139,8 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
                     <img
                         src={user.profile_image || `https://ui-avatars.com/api/?name=${user.name}&background=random`}
                         alt={user.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-8 h-8 rounded-full object-cover border border-gray-100"
                     />
                     <div>
@@ -177,6 +181,7 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
                             alt={post.caption || `Post by ${user.name}`}
                             className="w-full h-full object-cover"
                             loading="lazy"
+                            decoding="async"
                         />
                     </div>
                 ) : (

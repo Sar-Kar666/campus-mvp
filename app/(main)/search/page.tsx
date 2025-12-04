@@ -9,6 +9,7 @@ import { User, College, Branch, Year } from '@/types';
 import { SearchUserItem } from '@/components/SearchUserItem';
 import { Select } from "@/components/ui/select";
 import { AlertModal } from '@/components/AlertModal';
+import { useDebounce } from '@/hooks/use-debounce';
 
 const COLLEGES: College[] = ['TIT', 'ICFAI', 'Techno', 'JIS', 'KIIT', 'VIT', 'LPU'];
 const BRANCHES: Branch[] = ['CSE', 'ECE', 'ME', 'CE', 'IT', 'AIML', 'BBA', 'MBA'];
@@ -27,6 +28,8 @@ export default function SearchPage() {
     const [selectedCollege, setSelectedCollege] = useState<string>('all');
     const [selectedYear, setSelectedYear] = useState<string>('all');
     const [selectedBranch, setSelectedBranch] = useState<string>('all');
+
+    const debouncedQuery = useDebounce(query, 300);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -60,8 +63,8 @@ export default function SearchPage() {
         let result = allUsers;
 
         // 1. Text Search
-        if (query.trim()) {
-            const lowerQuery = query.toLowerCase();
+        if (debouncedQuery.trim()) {
+            const lowerQuery = debouncedQuery.toLowerCase();
             result = result.filter(user =>
                 user.name.toLowerCase().includes(lowerQuery) ||
                 user.username.toLowerCase().includes(lowerQuery) ||
@@ -86,7 +89,7 @@ export default function SearchPage() {
         }
 
         setFilteredUsers(result);
-    }, [query, allUsers, selectedCollege, selectedYear, selectedBranch]);
+    }, [debouncedQuery, allUsers, selectedCollege, selectedYear, selectedBranch]);
 
     const handleConnect = async (userId: string) => {
         const currentUserId = localStorage.getItem('cc_user_id');
@@ -183,15 +186,22 @@ export default function SearchPage() {
                 {loading ? (
                     <div className="text-center text-gray-500 py-10">Loading users...</div>
                 ) : filteredUsers.length > 0 ? (
-                    filteredUsers.map((user) => (
-                        <SearchUserItem
-                            key={user.id}
-                            user={user}
-                            onConnect={handleConnect}
-                            connectionStatus={connectionMap[user.id] || 'none'}
-                            isCurrentUser={currentUserId === user.id}
-                        />
-                    ))
+                    <>
+                        {filteredUsers.slice(0, 50).map((user) => (
+                            <SearchUserItem
+                                key={user.id}
+                                user={user}
+                                onConnect={handleConnect}
+                                connectionStatus={connectionMap[user.id] || 'none'}
+                                isCurrentUser={currentUserId === user.id}
+                            />
+                        ))}
+                        {filteredUsers.length > 50 && (
+                            <div className="text-center py-4 text-sm text-gray-500">
+                                Showing top 50 results. Refine your search to see more.
+                            </div>
+                        )}
+                    </>
                 ) : (
                     <div className="text-center py-10">
                         <p className="text-gray-900 font-medium">No users found</p>
