@@ -94,6 +94,21 @@ export const MockService = {
         return (data as User[]) || [];
     },
 
+    getUserById: async (userId: string): Promise<User | null> => {
+        if (!supabase) return null;
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+        if (error) {
+            console.error('[MockService] Error fetching user by ID:', error);
+            return null;
+        }
+        return data as User;
+    },
+
     getConnections: async (userId: string): Promise<Connection[]> => {
         if (!supabase) return [];
         const { data } = await supabase

@@ -1,4 +1,5 @@
 import { User } from '@/types';
+import Link from 'next/link';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,16 +18,20 @@ export function StudentCard({ user, onConnect, connectionStatus = 'none' }: Stud
             <CardContent className="pt-0 pb-4 relative">
                 <div className="flex justify-between items-start">
                     <div className="-mt-12 mb-3">
-                        <img
-                            src={user.profile_image || `https://ui-avatars.com/api/?name=${user.name}`}
-                            alt={user.name}
-                            className="w-24 h-24 rounded-full border-4 border-white bg-white object-cover"
-                        />
+                        <Link href={`/profile/${user.id}`}>
+                            <img
+                                src={user.profile_image || `https://ui-avatars.com/api/?name=${user.name}`}
+                                alt={user.name}
+                                className="w-24 h-24 rounded-full border-4 border-white bg-white object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                            />
+                        </Link>
                     </div>
                 </div>
 
                 <div className="space-y-1">
-                    <h3 className="font-bold text-lg">{user.name}</h3>
+                    <Link href={`/profile/${user.id}`} className="hover:underline">
+                        <h3 className="font-bold text-lg">{user.name}</h3>
+                    </Link>
                     <p className="text-sm text-gray-500 font-medium">
                         {user.college === 'Unknown' ? 'College N/A' : user.college} • {user.branch === 'Unknown' ? 'Branch N/A' : user.branch} • {user.year}
                     </p>
