@@ -56,16 +56,14 @@ export const MockService = {
                 .select()
                 .single();
 
-            if (error) {
-                console.error('[MockService] Error updating user:', error);
-                return undefined;
-            }
-
-            if (data) {
+            if (!error && data) {
                 console.log('[MockService] User updated successfully:', data);
                 localStorage.setItem(STORAGE_KEYS.USER_ID, data.id);
                 return data as User;
             }
+
+            console.warn('[MockService] Update failed (row might not exist), falling back to upsert:', error);
+            // Fallthrough to upsert if update fails (e.g. row doesn't exist yet)
         }
 
         // If no ID, try upsert (or insert)
