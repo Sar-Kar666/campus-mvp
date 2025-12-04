@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { LogOut, Edit2, Save, Trash2, Grid, Bookmark, SquareUser } from 'lucide-react';
 import { Select } from '@/components/ui/select';
 import { College, Branch, Year } from '@/types';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { FeedPost } from '@/components/FeedPost';
 
 import { AuthService } from '@/lib/auth-service';
 
@@ -35,6 +37,7 @@ export default function ProfilePage() {
     const [photos, setPhotos] = useState<{ id: string; url: string }[]>([]);
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [activeTab, setActiveTab] = useState('posts');
+    const [selectedPost, setSelectedPost] = useState<any>(null);
 
     const fetchPhotos = async (userId: string) => {
         const userPhotos = await MockService.getUserPhotos(userId);
@@ -341,14 +344,6 @@ export default function ProfilePage() {
                         {activeTab === 'posts' ? (
                             <div className="grid grid-cols-3 gap-px bg-white">
                                 {photos.map((photo) => (
-// ... imports
-import {Dialog, DialogContent} from "@/components/ui/dialog";
-                                import {FeedPost} from '@/components/FeedPost';
-
-                                // ... inside component
-                                const [selectedPost, setSelectedPost] = useState<any>(null);
-
-                                    // ... inside render, replacing the grid item
                                     <div
                                         key={photo.id}
                                         className="relative aspect-square group bg-gray-100 cursor-pointer"
@@ -363,52 +358,55 @@ import {Dialog, DialogContent} from "@/components/ui/dialog";
                                             alt="User photo"
                                             className="w-full h-full object-cover"
                                         />
-                                        {/* ... delete button ... */}
+                                        {isEditing && (
+                                            <button
+                                                onClick={() => handlePhotoDelete(photo.id)}
+                                                className="absolute top-1 right-1 bg-black/50 text-white p-1 rounded-full"
+                                            >
+                                                <Trash2 size={12} />
+                                            </button>
+                                        )}
                                     </div>
-
-// ... at the end of return
-                                    {/* Post Detail Modal */}
-                                    <Dialog open={!!selectedPost} onOpenChange={(open) => !open && setSelectedPost(null)}>
-                                        <DialogContent className="p-0 max-w-sm bg-transparent border-none shadow-none">
-                                            {selectedPost && (
-                                                <div className="bg-white rounded-lg overflow-hidden">
-                                                    <FeedPost post={selectedPost} />
-                                                </div>
-                                            )}
-                                        </DialogContent>
-                                    </Dialog>
-                            </div>
-                        );
-}
                                 ))}
-                        {photos.length === 0 && (
-                            <div className="col-span-3 text-center py-12 text-gray-400 text-sm">
-                                <div className="flex justify-center mb-2">
-                                    <div className="p-4 rounded-full border-2 border-gray-200">
-                                        <Grid size={32} className="text-gray-300" />
+                                {photos.length === 0 && (
+                                    <div className="col-span-3 text-center py-12 text-gray-400 text-sm">
+                                        <div className="flex justify-center mb-2">
+                                            <div className="p-4 rounded-full border-2 border-gray-200">
+                                                <Grid size={32} className="text-gray-300" />
+                                            </div>
+                                        </div>
+                                        <p className="font-semibold text-gray-900">No Posts Yet</p>
                                     </div>
-                                </div>
-                                <p className="font-semibold text-gray-900">No Posts Yet</p>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="py-12 text-center text-gray-400 text-sm">
+                                <p>Nothing here yet</p>
                             </div>
                         )}
                     </div>
-                    ) : (
-                    <div className="py-12 text-center text-gray-400 text-sm">
-                        <p>Nothing here yet</p>
-                    </div>
-                        )}
-                </div>
 
-                {isEditing && (
-                    <div className="flex space-x-2 pt-4">
-                        <Button id="cancel-profile-btn" className="flex-1" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-                        <Button id="save-profile-btn" className="flex-1" onClick={handleSave}>
-                            <Save size={16} className="mr-2" /> Save Changes
-                        </Button>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-        </div >
+                    {isEditing && (
+                        <div className="flex space-x-2 pt-4">
+                            <Button id="cancel-profile-btn" className="flex-1" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                            <Button id="save-profile-btn" className="flex-1" onClick={handleSave}>
+                                <Save size={16} className="mr-2" /> Save Changes
+                            </Button>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Post Detail Modal */}
+            <Dialog open={!!selectedPost} onOpenChange={(open) => !open && setSelectedPost(null)}>
+                <DialogContent className="p-0 max-w-sm bg-transparent border-none shadow-none">
+                    {selectedPost && (
+                        <div className="bg-white rounded-lg overflow-hidden">
+                            <FeedPost post={selectedPost} />
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
+        </div>
     );
 }
