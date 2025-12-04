@@ -96,7 +96,14 @@ export default function OnboardingPage() {
             interests: formData.interests.split(',').map(i => i.trim()).filter(i => i),
             profile_image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name}`,
         };
-        await MockService.saveCurrentUser(newUser);
+        const savedUser = await MockService.saveCurrentUser(newUser);
+
+        if (!savedUser) {
+            setLoading(false);
+            setErrorMsg('Failed to save profile. Please try again.');
+            return;
+        }
+
         setLoading(false);
         router.push('/discover');
     };

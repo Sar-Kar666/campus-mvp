@@ -44,53 +44,24 @@ export const MockService = {
     saveCurrentUser: async (user: Partial<User> & { email?: string }) => {
         if (typeof window === 'undefined' || !supabase) return;
 
-        // Check if user exists by email
-        if (user.email) {
-            const { data: existingUser } = await supabase
-                .from('users')
-                .select('id')
-                .eq('email', user.email)
-                .single();
+        console.log('[MockService] Saving user:', user);
 
-            if (existingUser) {
-                // If we have an ID, use it to update
-                const userId = existingUser.id;
-                const { data, error } = await supabase
-                    .from('users')
-                    .update(user)
-                    .eq('id', userId)
-                    .select()
-                    .single();
+        // Use upsert to handle both create and update scenarios
+        // This avoids race conditions with the database trigger
+        const { data, error } = await supabase
+            .from('users')
+            .upsert(user)
+            .select()
+            .single();
 
-                if (data) {
-                    localStorage.setItem(STORAGE_KEYS.USER_ID, data.id);
-                    return data as User;
-                }
-            }
+        if (error) {
+            console.error('[MockService] Error saving user:', error);
+            return undefined;
         }
 
-        // Create new user or update existing by ID
-        const userId = user.id || localStorage.getItem(STORAGE_KEYS.USER_ID);
-
-        if (!userId) {
-            // This should be a new insert
-            const { data, error } = await supabase
-                .from('users')
-                .insert([user])
-                .select()
-                .single();
-
-            if (data) {
-                localStorage.setItem(STORAGE_KEYS.USER_ID, data.id);
-                return data as User;
-            }
-        } else {
-            const { data, error } = await supabase
-                .from('users')
-                .update(user)
-                .eq('id', userId)
-                .select()
-                .single();
+        if (data) {
+            console.log('[MockService] User saved successfully:', data);
+            localStorage.setItem(STORAGE_KEYS.USER_ID, data.id);
             return data as User;
         }
     },
