@@ -9,8 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LogOut, Edit2, Save } from 'lucide-react';
+import { Select } from '@/components/ui/select';
+import { College, Branch, Year } from '@/types';
 
 import { AuthService } from '@/lib/auth-service';
+
+const COLLEGES: College[] = ['TIT', 'ICFAI', 'Techno', 'JIS', 'KIIT', 'VIT', 'LPU'];
+const BRANCHES: Branch[] = ['CSE', 'ECE', 'ME', 'CE', 'IT', 'AIML', 'BBA', 'MBA'];
+const YEARS: Year[] = ['1st', '2nd', '3rd', '4th'];
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -22,6 +28,9 @@ export default function ProfilePage() {
         bio: '',
         interests: '',
         profile_image: '',
+        college: '',
+        branch: '',
+        year: '',
     });
 
     useEffect(() => {
@@ -35,6 +44,9 @@ export default function ProfilePage() {
                         bio: currentUser.bio || '',
                         interests: currentUser.interests.join(', '),
                         profile_image: currentUser.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.name}`,
+                        college: currentUser.college === 'Unknown' ? '' : currentUser.college,
+                        branch: currentUser.branch === 'Unknown' ? '' : currentUser.branch,
+                        year: currentUser.year === '1st' && currentUser.college === 'Unknown' ? '' : currentUser.year, // Handle default logic
                     });
                 } else {
                     router.push('/onboarding');
@@ -73,6 +85,9 @@ export default function ProfilePage() {
                 bio: editForm.bio,
                 interests: editForm.interests.split(',').map(i => i.trim()).filter(i => i),
                 profile_image: editForm.profile_image,
+                college: editForm.college || 'Unknown',
+                branch: editForm.branch || 'Unknown',
+                year: editForm.year || '1st',
             };
 
             const savedUser = await MockService.saveCurrentUser(updatedUser);
@@ -137,17 +152,55 @@ export default function ProfilePage() {
                         {!isEditing ? (
                             <div className="text-center">
                                 <h2 className="text-xl font-bold">{user.name}</h2>
-                                <p className="text-sm text-gray-500">{user.college} • {user.branch} • {user.year}</p>
+                                <p className="text-sm text-gray-500">
+                                    {user.college === 'Unknown' ? 'College not set' : user.college} •
+                                    {user.branch === 'Unknown' ? 'Branch not set' : user.branch} •
+                                    {user.year}
+                                </p>
                             </div>
                         ) : (
-                            <div className="w-full max-w-xs space-y-2">
-                                <label className="text-xs font-medium text-gray-500">Name</label>
-                                <Input
-                                    id="name-input"
-                                    value={editForm.name}
-                                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                                    className="text-center font-bold"
-                                />
+                            <div className="w-full max-w-xs space-y-3">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-gray-500">Name</label>
+                                    <Input
+                                        id="name-input"
+                                        value={editForm.name}
+                                        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                        className="text-center font-bold"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-left">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-gray-500">College</label>
+                                        <Select
+                                            value={editForm.college}
+                                            onChange={(e) => setEditForm({ ...editForm, college: e.target.value })}
+                                        >
+                                            <option value="">Select</option>
+                                            {COLLEGES.map(c => <option key={c} value={c}>{c}</option>)}
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-gray-500">Branch</label>
+                                        <Select
+                                            value={editForm.branch}
+                                            onChange={(e) => setEditForm({ ...editForm, branch: e.target.value })}
+                                        >
+                                            <option value="">Select</option>
+                                            {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-1 col-span-2">
+                                        <label className="text-xs font-medium text-gray-500">Year</label>
+                                        <Select
+                                            value={editForm.year}
+                                            onChange={(e) => setEditForm({ ...editForm, year: e.target.value })}
+                                        >
+                                            <option value="">Select</option>
+                                            {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                                        </Select>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>

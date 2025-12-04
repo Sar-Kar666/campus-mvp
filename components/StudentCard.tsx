@@ -28,7 +28,7 @@ export function StudentCard({ user, onConnect, connectionStatus = 'none' }: Stud
                 <div className="space-y-1">
                     <h3 className="font-bold text-lg">{user.name}</h3>
                     <p className="text-sm text-gray-500 font-medium">
-                        {user.college} • {user.branch} • {user.year} Year
+                        {user.college === 'Unknown' ? 'College N/A' : user.college} • {user.branch === 'Unknown' ? 'Branch N/A' : user.branch} • {user.year}
                     </p>
                     {user.bio && (
                         <p className="text-sm text-gray-600 line-clamp-2 mt-2">{user.bio}</p>
