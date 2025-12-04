@@ -1,5 +1,5 @@
 import { BottomNav } from '@/components/layout/BottomNav';
-import { MobileContainer } from '@/components/layout/MobileContainer';
+import { NotificationListener } from '@/components/NotificationListener';
 
 export default function MainLayout({
     children,
@@ -7,11 +7,10 @@ export default function MainLayout({
     children: React.ReactNode;
 }) {
     return (
-        <MobileContainer>
-            <main className="pb-20 min-h-screen">
-                {children}
-            </main>
+        <div className="pb-16 min-h-screen bg-gray-50">
+            <NotificationListener />
+            {children}
             <BottomNav />
-        </MobileContainer>
+        </div>
     );
 }

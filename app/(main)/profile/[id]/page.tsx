@@ -148,19 +148,19 @@ export default function PublicProfilePage() {
 
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-gray-900">Photos</label>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-3 gap-0.5">
                             {photos.map((photo) => (
                                 <div key={photo.id} className="relative aspect-square">
                                     <img
                                         src={photo.url}
                                         alt="User photo"
-                                        className="w-full h-full object-cover rounded-md"
+                                        className="w-full h-full object-cover"
                                     />
                                 </div>
                             ))}
                             {photos.length === 0 && (
-                                <div className="col-span-3 text-center py-4 text-gray-500 text-sm">
-                                    No photos uploaded.
+                                <div className="col-span-3 text-center py-8 text-gray-400 text-sm bg-gray-50">
+                                    No photos yet
                                 </div>
                             )}
                         </div>

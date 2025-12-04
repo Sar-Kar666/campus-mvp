@@ -295,18 +295,18 @@ export default function ProfilePage() {
                                 </div>
                             )}
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-3 gap-0.5">
                             {photos.map((photo) => (
                                 <div key={photo.id} className="relative aspect-square group">
                                     <img
                                         src={photo.url}
                                         alt="User photo"
-                                        className="w-full h-full object-cover rounded-md"
+                                        className="w-full h-full object-cover"
                                     />
                                     {!isEditing && (
                                         <button
                                             onClick={() => handlePhotoDelete(photo.id)}
-                                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="absolute top-1 right-1 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                         >
                                             <Trash2 size={12} />
                                         </button>
@@ -314,8 +314,8 @@ export default function ProfilePage() {
                                 </div>
                             ))}
                             {photos.length === 0 && (
-                                <div className="col-span-3 text-center py-4 text-gray-500 text-sm">
-                                    No photos uploaded yet.
+                                <div className="col-span-3 text-center py-8 text-gray-400 text-sm bg-gray-50">
+                                    No photos yet
                                 </div>
                             )}
                         </div>

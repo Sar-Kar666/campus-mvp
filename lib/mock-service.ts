@@ -211,4 +211,14 @@ export const MockService = {
         // to avoid complex path parsing. RLS will prevent unauthorized deletion.
         await supabase.from('photos').delete().eq('id', photoId);
     },
+
+    searchUsers: async (query: string): Promise<User[]> => {
+        if (!supabase || !query.trim()) return [];
+        const { data } = await supabase
+            .from('users')
+            .select('*')
+            .or(`name.ilike.%${query}%,college.ilike.%${query}%,branch.ilike.%${query}%`)
+            .limit(20);
+        return (data as User[]) || [];
+    },
 };

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, MessageCircle, User } from 'lucide-react';
+import { Home, Users, MessageCircle, User, Search } from 'lucide-react';
 import { cn } from "@/lib/utils"
 
 export function BottomNav() {
@@ -10,6 +10,7 @@ export function BottomNav() {
 
     const links = [
         { href: '/discover', label: 'Discover', icon: Home },
+        { href: '/search', label: 'Search', icon: Search },
         { href: '/connections', label: 'Connect', icon: Users },
         { href: '/chat', label: 'Chat', icon: MessageCircle },
         { href: '/profile', label: 'Profile', icon: User },
