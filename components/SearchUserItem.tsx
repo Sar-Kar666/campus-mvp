@@ -1,4 +1,3 @@
-import { memo } from 'react';
 import { User } from '@/types';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -12,7 +11,7 @@ interface SearchUserItemProps {
     isCurrentUser?: boolean;
 }
 
-export const SearchUserItem = memo(function SearchUserItem({ user, onConnect, connectionStatus = 'none', isCurrentUser = false }: SearchUserItemProps) {
+export function SearchUserItem({ user, onConnect, connectionStatus = 'none', isCurrentUser = false }: SearchUserItemProps) {
     const isGolden = isGoldenUser(user.username);
 
     return (
@@ -22,8 +21,6 @@ export const SearchUserItem = memo(function SearchUserItem({ user, onConnect, co
                     <img
                         src={user.profile_image || `https://ui-avatars.com/api/?name=${user.name}`}
                         alt={user.username}
-                        loading="lazy"
-                        decoding="async"
                         className={`w-12 h-12 rounded-full object-cover border-2 ${isGolden ? 'border-white' : 'border-gray-100'} flex-shrink-0`}
                     />
                 </div>
@@ -65,4 +62,4 @@ export const SearchUserItem = memo(function SearchUserItem({ user, onConnect, co
             )}
         </div>
     );
-});
+}

@@ -9,7 +9,8 @@ import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, MoreHorizontal, Bookmark, Send, Trash2, X } from 'lucide-react';
 import { MockService } from '@/lib/mock-service';
 import { Button } from '@/components/ui/button';
-
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface FeedPostProps {
     post: {
@@ -29,32 +30,15 @@ interface FeedPostProps {
     onDelete?: () => void;
 }
 
-import dynamic from 'next/dynamic';
-
-const ShareModal = dynamic(() => import('./ShareModal').then(mod => mod.ShareModal), {
-    loading: () => null,
-    ssr: false
-});
-
-// We can't easily dynamic import the Dialog parts individually as they are exports from a file.
-// But we can dynamic import the Dialog itself if we wrap it or just the ShareModal is a big win.
-// Let's also dynamic import the comments section content if possible, but for now ShareModal is a distinct component.
-// To optimize Dialog, we would need to move the comments logic to a separate component and dynamic import that.
-
-// Let's create a CommentsSheet component to lazy load the comments UI.
-const CommentsSheet = dynamic(() => import('./CommentsSheet').then(mod => mod.CommentsSheet), {
-    loading: () => null,
-    ssr: false
-});
-
 export function FeedPost({ post, onDelete }: FeedPostProps) {
     const user = post.users;
     const [liked, setLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(0);
-    const [commentCount, setCommentCount] = useState(0);
     const [showComments, setShowComments] = useState(false);
-    const [showShareModal, setShowShareModal] = useState(false);
+    const [comments, setComments] = useState<any[]>([]);
+    const [newComment, setNewComment] = useState('');
     const [currentUser, setCurrentUser] = useState<any>(null);
+    const [replyingTo, setReplyingTo] = useState<{ id: string; name: string; username: string } | null>(null);
     const [showOptions, setShowOptions] = useState(false);
 
     useEffect(() => {
@@ -66,8 +50,10 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
                 setLiked(hasLiked);
             }
             const { count } = await MockService.getLikes(post.id);
-            const { count: cCount } = await MockService.getCommentCount(post.id);
-            setCommentCount(cCount);
+            setLikeCount(count);
+
+            const { comments } = await MockService.getComments(post.id);
+            setComments(comments);
         };
         init();
     }, [post.id]);
@@ -91,7 +77,57 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
         await MockService.toggleLike(post.id, currentUser.id);
     };
 
+    const handleCommentSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newComment.trim() || !currentUser) return;
 
+        const { comment } = await MockService.addComment(post.id, currentUser.id, newComment, replyingTo?.id);
+        if (comment) {
+            setComments([...comments, comment]);
+            setNewComment('');
+            setReplyingTo(null);
+        }
+    };
+
+    const handleReply = (comment: any) => {
+        // If replying to a reply, use the PARENT'S id so it stays in the same thread
+        // If replying to a root comment, use that comment's id
+        const parentId = comment.parent_id || comment.id;
+
+        setReplyingTo({
+            id: parentId, // Use the root parent ID
+            name: comment.users?.name,
+            username: comment.users?.username || 'user'
+        });
+        setNewComment(`@${comment.users?.username || 'user'} `);
+    };
+
+    const rootComments = comments.filter(c => !c.parent_id);
+    const getReplies = (commentId: string) => comments.filter(c => c.parent_id === commentId);
+
+    const CommentItem = ({ comment, isReply = false }: { comment: any, isReply?: boolean }) => (
+        <div className={`flex space-x-3 ${isReply ? 'ml-8 mt-2' : 'mt-4'}`}>
+            <img
+                src={comment.users?.profile_image || `https://ui-avatars.com/api/?name=${comment.users?.name}`}
+                className="w-8 h-8 rounded-full object-cover"
+            />
+            <div className="flex-1">
+                <div className="bg-gray-100 p-3 rounded-lg rounded-tl-none">
+                    <div className="flex justify-between items-start">
+                        <span className="font-bold text-sm text-gray-900">{comment.users?.username}</span>
+                        <span className="text-xs text-gray-500">{new Date(comment.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <p className="text-sm text-gray-800 mt-1">{comment.content}</p>
+                </div>
+                <button
+                    onClick={() => handleReply(comment)}
+                    className="text-xs text-gray-500 font-semibold mt-1 hover:text-gray-800"
+                >
+                    Reply
+                </button>
+            </div>
+        </div>
+    );
 
     return (
         <div className="bg-white border-b border-gray-100 pb-4 mb-4">
@@ -101,8 +137,6 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
                     <img
                         src={user.profile_image || `https://ui-avatars.com/api/?name=${user.name}&background=random`}
                         alt={user.name}
-                        loading="lazy"
-                        decoding="async"
                         className="w-8 h-8 rounded-full object-cover border border-gray-100"
                     />
                     <div>
@@ -143,7 +177,6 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
                             alt={post.caption || `Post by ${user.name}`}
                             className="w-full h-full object-cover"
                             loading="lazy"
-                            decoding="async"
                         />
                     </div>
                 ) : (
@@ -175,11 +208,13 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
                         <button onClick={() => setShowComments(true)} className="hover:opacity-60 transition-opacity">
                             <MessageCircle size={24} className="text-black" />
                         </button>
-                        <button onClick={() => setShowShareModal(true)} className="hover:opacity-60 transition-opacity">
+                        <button className="hover:opacity-60 transition-opacity">
                             <Send size={24} className="text-black" />
                         </button>
                     </div>
-
+                    <button className="hover:opacity-60 transition-opacity">
+                        <Bookmark size={24} className="text-black" />
+                    </button>
                 </div>
 
                 {/* Likes */}
@@ -196,9 +231,17 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
                 )}
 
                 {/* Comments Preview */}
-                <button onClick={() => setShowComments(true)} className="text-gray-500 text-sm mt-1">
-                    {commentCount > 0 ? `View all ${commentCount} comments` : 'Add a comment...'}
-                </button>
+                {comments.length > 0 && (
+                    <button onClick={() => setShowComments(true)} className="text-gray-500 text-sm">
+                        View all {comments.length} comments
+                    </button>
+                )}
+                {comments.slice(-2).map((comment) => (
+                    <div key={comment.id} className="flex items-start space-x-1 mt-1">
+                        <span className="font-bold text-sm text-gray-900">{comment.users?.name}</span>
+                        <span className="text-sm text-gray-800 line-clamp-1">{comment.content}</span>
+                    </div>
+                ))}
             </div>
 
             {/* Timestamp */}
@@ -208,25 +251,49 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
                 </p>
             </div>
 
-            {/* Comments Sheet */}
-            {showComments && (
-                <CommentsSheet
-                    isOpen={showComments}
-                    onClose={setShowComments}
-                    postId={post.id}
-                    currentUser={currentUser}
-                />
-            )}
+            {/* Comments Dialog/Sheet */}
+            <Dialog open={showComments} onOpenChange={setShowComments}>
+                <DialogContent className="max-w-md h-[80vh] flex flex-col p-0 gap-0">
+                    <DialogHeader className="p-4 border-b">
+                        <DialogTitle className="text-center">Comments</DialogTitle>
+                    </DialogHeader>
 
-            <ShareModal
-                isOpen={showShareModal}
-                onClose={() => setShowShareModal(false)}
-                postUrl={post.url}
-                postId={post.id}
-                postUsername={user.username || 'User'}
-                postCaption={post.caption}
-                postUserImage={user.profile_image}
-            />
+                    <div className="flex-1 overflow-y-auto p-4 space-y-0">
+                        {comments.length === 0 ? (
+                            <div className="text-center text-gray-500 mt-10">No comments yet.</div>
+                        ) : (
+                            rootComments.map((comment) => (
+                                <div key={comment.id}>
+                                    <CommentItem comment={comment} />
+                                    {getReplies(comment.id).map(reply => (
+                                        <CommentItem key={reply.id} comment={reply} isReply={true} />
+                                    ))}
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    <div className="p-3 border-t bg-white">
+                        {replyingTo && (
+                            <div className="flex justify-between items-center px-2 pb-2 text-xs text-gray-500">
+                                <span>Replying to <b>{replyingTo.name}</b> (@{replyingTo.username})</span>
+                                <button onClick={() => { setReplyingTo(null); setNewComment(''); }} className="text-black font-bold">Cancel</button>
+                            </div>
+                        )}
+                        <form onSubmit={handleCommentSubmit} className="flex items-center space-x-2">
+                            <Input
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Add a comment..."}
+                                className="flex-1 border-none focus-visible:ring-0 bg-gray-50 text-gray-900 placeholder:text-gray-500"
+                            />
+                            <Button type="submit" variant="ghost" size="icon" disabled={!newComment.trim()}>
+                                <Send size={18} className="text-blue-500" />
+                            </Button>
+                        </form>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

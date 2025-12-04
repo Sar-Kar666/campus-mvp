@@ -332,12 +332,8 @@ export const MockService = {
             .eq('is_read', false);
     },
 
-    getRecentPhotos: async (page = 0, limit = 10): Promise<any[]> => {
+    getRecentPhotos: async (): Promise<any[]> => {
         if (!supabase) return [];
-
-        const start = page * limit;
-        const end = start + limit - 1;
-
         const { data, error } = await supabase
             .from('photos')
             .select(`
@@ -352,7 +348,7 @@ export const MockService = {
                 )
             `)
             .order('created_at', { ascending: false })
-            .range(start, end);
+            .limit(50);
 
         if (error) {
             console.error('Error fetching recent photos:', error);
@@ -444,33 +440,12 @@ export const MockService = {
                     .in('username', uniqueUsernames);
 
                 if (mentionedUsers) {
-                    // Fetch post details for the preview
-                    const { data: postData } = await supabase
-                        .from('photos')
-                        .select('url, users(username)')
-                        .eq('id', photoId)
-                        .single();
-
                     for (const mentionedUser of mentionedUsers) {
                         if (mentionedUser.id !== userId) { // Don't notify self
-                            let message = `Mentioned you in a comment: "${content}"`;
-
-                            if (postData) {
-                                const postUser = (postData as any).users;
-                                const postUsername = Array.isArray(postUser) ? postUser[0]?.username : postUser?.username;
-
-                                const commentUser = (data as any).users;
-                                const commentUsername = Array.isArray(commentUser) ? commentUser[0]?.username : commentUser?.username;
-                                const commentUserImage = Array.isArray(commentUser) ? commentUser[0]?.profile_image : commentUser?.profile_image;
-
-                                // MENTION_POST::postId::postUrl::postOwnerUsername::commentContent::commenterUsername::commenterImage
-                                message = `MENTION_POST::${photoId}::${postData.url}::${postUsername}::${content}::${commentUsername}::${commentUserImage || ''}`;
-                            }
-
                             await MockService.sendMessage(
                                 userId,
                                 mentionedUser.id,
-                                message
+                                `Mentioned you in a comment: "${content}"`
                             );
                         }
                     }
@@ -505,15 +480,6 @@ export const MockService = {
             return { comments: [] };
         }
         return { comments: data || [] };
-    },
-
-    getCommentCount: async (photoId: string): Promise<{ count: number }> => {
-        if (!supabase) return { count: 0 };
-        const { count } = await supabase
-            .from('comments')
-            .select('*', { count: 'exact', head: true })
-            .eq('photo_id', photoId);
-        return { count: count || 0 };
     },
 
     getConversations: async (userId: string): Promise<any[]> => {
