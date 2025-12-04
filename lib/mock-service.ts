@@ -219,8 +219,11 @@ export const MockService = {
             .from('messages')
             .select('*')
             .or(`and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`)
-            .order('created_at', { ascending: true });
-        return (data as Message[]) || [];
+            .order('created_at', { ascending: false }) // Get newest first
+            .limit(50); // Limit to 50
+
+        // Reverse to show oldest first (chronological order)
+        return (data as Message[])?.reverse() || [];
     },
 
     sendMessage: async (senderId: string, receiverId: string, content: string) => {
@@ -296,6 +299,11 @@ export const MockService = {
 
     uploadProfilePicture: async (userId: string, file: File): Promise<{ success: boolean; url?: string; error?: string }> => {
         if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            return { success: false, error: 'Image size must be less than 5MB' };
+        }
 
         const fileExt = file.name.split('.').pop();
         const fileName = `avatars/${userId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
