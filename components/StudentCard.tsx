@@ -36,18 +36,18 @@ export function StudentCard({ user, onConnect, connectionStatus = 'none' }: Stud
                         {user.college === 'Unknown' ? 'College N/A' : user.college} • {user.branch === 'Unknown' ? 'Branch N/A' : user.branch} • {user.year}
                     </p>
                     {user.bio && (
-                        <p className="text-sm text-gray-600 line-clamp-2 mt-2">{user.bio}</p>
+                        <p className="text-sm text-gray-800 line-clamp-2 mt-2">{user.bio}</p>
                     )}
                 </div>
 
                 <div className="flex flex-wrap gap-1 mt-3">
                     {user.interests.slice(0, 3).map((interest, i) => (
-                        <Badge key={i} variant="secondary" className="text-xs">
+                        <Badge key={i} className="bg-gray-900 text-white hover:bg-gray-800 text-xs">
                             {interest}
                         </Badge>
                     ))}
                     {user.interests.length > 3 && (
-                        <Badge variant="secondary" className="text-xs">+{user.interests.length - 3}</Badge>
+                        <Badge className="bg-gray-900 text-white hover:bg-gray-800 text-xs">+{user.interests.length - 3}</Badge>
                     )}
                 </div>
             </CardContent>
