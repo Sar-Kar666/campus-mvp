@@ -221,4 +221,24 @@ export const MockService = {
             .limit(20);
         return (data as User[]) || [];
     },
+
+    getUnreadCount: async (userId: string): Promise<number> => {
+        if (!supabase) return 0;
+        const { count } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('receiver_id', userId)
+            .eq('is_read', false);
+        return count || 0;
+    },
+
+    markMessagesAsRead: async (userId: string, senderId: string): Promise<void> => {
+        if (!supabase) return;
+        await supabase
+            .from('messages')
+            .update({ is_read: true })
+            .eq('receiver_id', userId)
+            .eq('sender_id', senderId)
+            .eq('is_read', false);
+    },
 };

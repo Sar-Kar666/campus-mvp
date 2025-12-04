@@ -3,8 +3,11 @@
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useUnread } from '@/context/UnreadContext';
 
 export function NotificationListener() {
+    const { incrementUnread } = useUnread();
+
     useEffect(() => {
         const userId = localStorage.getItem('cc_user_id');
         if (!userId || !supabase) return;
@@ -21,6 +24,10 @@ export function NotificationListener() {
                 },
                 async (payload) => {
                     if (!supabase) return;
+
+                    // Increment unread count
+                    incrementUnread();
+
                     // Fetch sender name
                     const { data: sender } = await supabase
                         .from('users')

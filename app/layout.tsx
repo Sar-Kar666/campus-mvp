@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 import { Toaster } from 'sonner';
+import { UnreadProvider } from '@/context/UnreadContext';
 
 export default function RootLayout({
   children,
@@ -29,8 +30,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        <Toaster position="top-center" />
+        <UnreadProvider>
+          {children}
+          <Toaster position="top-center" />
+        </UnreadProvider>
       </body>
     </html>
   );

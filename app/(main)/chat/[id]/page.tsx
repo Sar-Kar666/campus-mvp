@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Send } from 'lucide-react';
 
+import { useUnread } from '@/context/UnreadContext';
+
 export default function ChatScreen() {
     const params = useParams();
     const router = useRouter();
@@ -16,6 +18,7 @@ export default function ChatScreen() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const { markMessagesAsRead, refreshUnread } = useUnread();
 
     const otherUserId = params.id as string;
 
@@ -31,6 +34,10 @@ export default function ChatScreen() {
                 // Load initial messages
                 const initialMessages = await MockService.getMessages(user.id, otherUserId);
                 setMessages(initialMessages);
+
+                // Mark messages as read
+                markMessagesAsRead(user.id, otherUserId);
+                refreshUnread();
 
                 // Poll for new messages (simulating real-time)
                 const interval = setInterval(async () => {
