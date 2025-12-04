@@ -117,10 +117,10 @@ export default function ProfilePage() {
         <div className="min-h-screen bg-gray-50 p-4 space-y-4">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>My Profile</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-black">My Profile</CardTitle>
                     <div className="flex items-center gap-2">
                         {!isEditing && (
-                            <Button id="edit-profile-btn" variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
+                            <Button id="edit-profile-btn" variant="ghost" size="icon" onClick={() => setIsEditing(true)} className="text-black hover:bg-gray-100">
                                 <Edit2 size={20} />
                             </Button>
                         )}
