@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Grid } from 'lucide-react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FeedPost } from '@/components/FeedPost';
+import { isGoldenUser } from '@/lib/constants';
+import { Crown } from 'lucide-react';
 
 export default function PublicProfilePage() {
     const params = useParams();
@@ -85,8 +87,10 @@ export default function PublicProfilePage() {
         );
     }
 
+    const isGolden = isGoldenUser(user.username);
+
     return (
-        <div className="min-h-screen bg-white pb-20">
+        <div className={`min-h-screen pb-20 ${isGolden ? 'bg-gradient-to-b from-amber-50 via-white to-white' : 'bg-white'}`}>
             <div className="max-w-md mx-auto pt-6 px-4">
                 <Button variant="ghost" className="mb-4 -ml-2 text-black hover:bg-gray-100" onClick={() => router.back()}>
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back
@@ -95,17 +99,20 @@ export default function PublicProfilePage() {
                 {/* Top Section: Avatar & Stats */}
                 <div className="flex items-center gap-6">
                     {/* Avatar */}
-                    <div className="relative shrink-0">
+                    <div className={`relative shrink-0 ${isGolden ? 'p-[3px] rounded-full bg-gradient-to-tr from-amber-300 via-yellow-400 to-amber-500' : ''}`}>
                         <img
                             src={user.profile_image || `https://ui-avatars.com/api/?name=${user.name}`}
                             alt={user.name}
-                            className="w-24 h-24 rounded-full bg-gray-200 object-cover border border-gray-200"
+                            className={`w-24 h-24 rounded-full bg-gray-200 object-cover border-4 ${isGolden ? 'border-white' : 'border-gray-200'}`}
                         />
                     </div>
 
                     {/* Right Side: Name & Stats */}
                     <div className="flex-1 min-w-0 space-y-4">
-                        <h2 className="text-xl font-bold truncate text-black">{user.name}</h2>
+                        <div className="flex items-center gap-2">
+                            <h2 className={`text-xl font-bold truncate ${isGolden ? 'text-amber-600' : 'text-black'}`}>{user.name}</h2>
+                            {isGolden && <Crown size={20} className="text-amber-500 fill-amber-500" />}
+                        </div>
 
                         <div className="flex gap-8">
                             <div className="text-center">

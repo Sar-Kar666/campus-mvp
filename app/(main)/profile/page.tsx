@@ -16,6 +16,8 @@ import { FeedPost } from '@/components/FeedPost';
 import { toast } from "sonner";
 
 import { AuthService } from '@/lib/auth-service';
+import { isGoldenUser } from '@/lib/constants';
+import { Crown } from 'lucide-react';
 
 const COLLEGES: College[] = ['TIT', 'ICFAI', 'Techno', 'JIS', 'KIIT', 'VIT', 'LPU'];
 const BRANCHES: Branch[] = ['CSE', 'ECE', 'ME', 'CE', 'IT', 'AIML', 'BBA', 'MBA'];
@@ -155,17 +157,19 @@ export default function ProfilePage() {
 
     if (!user) return null;
 
+    const isGolden = isGoldenUser(user.username);
+
     return (
-        <div className="min-h-screen bg-white pb-20">
+        <div className={`min-h-screen pb-20 ${isGolden ? 'bg-gradient-to-b from-amber-50 via-white to-white' : 'bg-white'}`}>
             <div className="max-w-md mx-auto pt-6 px-4">
                 {/* Top Section: Avatar & Stats */}
                 <div className="flex items-center gap-6">
                     {/* Avatar */}
-                    <div className="relative shrink-0 group">
+                    <div className={`relative shrink-0 group ${isGolden ? 'p-[3px] rounded-full bg-gradient-to-tr from-amber-300 via-yellow-400 to-amber-500' : ''}`}>
                         <img
                             src={isEditing ? editForm.profile_image : user.profile_image}
                             alt={user.name}
-                            className="w-24 h-24 rounded-full bg-gray-200 object-cover border border-gray-200"
+                            className={`w-24 h-24 rounded-full bg-gray-200 object-cover border-4 ${isGolden ? 'border-white' : 'border-gray-200'}`}
                         />
                         {isEditing && (
                             <div
@@ -180,7 +184,12 @@ export default function ProfilePage() {
 
                     {/* Right Side: Name & Stats */}
                     <div className="flex-1 min-w-0 space-y-4">
-                        {!isEditing && <h2 className="text-xl font-bold truncate text-black">{user.name}</h2>}
+                        {!isEditing && (
+                            <div className="flex items-center gap-2">
+                                <h2 className={`text-xl font-bold truncate ${isGolden ? 'text-amber-600' : 'text-black'}`}>{user.name}</h2>
+                                {isGolden && <Crown size={20} className="text-amber-500 fill-amber-500" />}
+                            </div>
+                        )}
 
                         {!isEditing && (
                             <div className="flex gap-8">

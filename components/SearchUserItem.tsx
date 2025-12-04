@@ -1,6 +1,8 @@
 import { User } from '@/types';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { isGoldenUser } from '@/lib/constants';
+import { Crown } from 'lucide-react';
 
 interface SearchUserItemProps {
     user: User;
@@ -10,18 +12,25 @@ interface SearchUserItemProps {
 }
 
 export function SearchUserItem({ user, onConnect, connectionStatus = 'none', isCurrentUser = false }: SearchUserItemProps) {
+    const isGolden = isGoldenUser(user.username);
+
     return (
         <div className="flex items-center justify-between py-2">
             <Link href={`/profile/${user.id}`} className="flex items-center gap-3 flex-1 min-w-0">
-                <img
-                    src={user.profile_image || `https://ui-avatars.com/api/?name=${user.name}`}
-                    alt={user.username}
-                    className="w-12 h-12 rounded-full object-cover border border-gray-100 flex-shrink-0"
-                />
+                <div className={`relative ${isGolden ? 'p-[2px] rounded-full bg-gradient-to-tr from-amber-300 via-yellow-400 to-amber-500' : ''}`}>
+                    <img
+                        src={user.profile_image || `https://ui-avatars.com/api/?name=${user.name}`}
+                        alt={user.username}
+                        className={`w-12 h-12 rounded-full object-cover border-2 ${isGolden ? 'border-white' : 'border-gray-100'} flex-shrink-0`}
+                    />
+                </div>
                 <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-sm text-gray-900 truncate">
-                        {user.username}
-                    </h4>
+                    <div className="flex items-center gap-1">
+                        <h4 className={`font-semibold text-sm truncate ${isGolden ? 'text-amber-600' : 'text-gray-900'}`}>
+                            {user.username}
+                        </h4>
+                        {isGolden && <Crown size={12} className="text-amber-500 fill-amber-500" />}
+                    </div>
                     <p className="text-sm text-gray-500 truncate">
                         {user.name} • {user.college}
                     </p>
