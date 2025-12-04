@@ -241,4 +241,27 @@ export const MockService = {
             .eq('sender_id', senderId)
             .eq('is_read', false);
     },
+
+    getRecentPhotos: async (): Promise<any[]> => {
+        if (!supabase) return [];
+        const { data, error } = await supabase
+            .from('photos')
+            .select(`
+                *,
+                users (
+                    id,
+                    name,
+                    profile_image,
+                    college
+                )
+            `)
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+        if (error) {
+            console.error('Error fetching recent photos:', error);
+            return [];
+        }
+        return data || [];
+    },
 };
