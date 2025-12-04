@@ -16,7 +16,6 @@ const YEARS: Year[] = ['1st', '2nd', '3rd', '4th'];
 
 export default function SearchPage() {
     const [query, setQuery] = useState('');
-    const [allUsers, setAllUsers] = useState<User[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [alertOpen, setAlertOpen] = useState(false);
@@ -28,71 +27,62 @@ export default function SearchPage() {
     const [selectedYear, setSelectedYear] = useState<string>('all');
     const [selectedBranch, setSelectedBranch] = useState<string>('all');
 
+    // 1. Fetch current user and connections on mount
     useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
+        const fetchConnections = async () => {
             const userId = localStorage.getItem('cc_user_id');
             setCurrentUserId(userId);
 
-            const [users, connections] = await Promise.all([
-                MockService.getAllUsers(),
-                userId ? MockService.getConnections(userId) : Promise.resolve([])
-            ]);
-
-            // Create connection map
-            const map: Record<string, 'pending' | 'accepted' | 'rejected'> = {};
             if (userId) {
+                const connections = await MockService.getConnections(userId);
+                const map: Record<string, 'pending' | 'accepted' | 'rejected'> = {};
                 connections.forEach(conn => {
                     const otherId = conn.requester_id === userId ? conn.receiver_id : conn.requester_id;
                     map[otherId] = conn.status;
                 });
+                setConnectionMap(map);
             }
-            setConnectionMap(map);
-
-            setAllUsers(users);
-            setFilteredUsers(users);
-            setLoading(false);
         };
-        fetchData();
+        fetchConnections();
     }, []);
 
+    // 2. Fetch users when filters or query change (Debounced)
     useEffect(() => {
-        let result = allUsers;
+        const fetchUsers = async () => {
+            setLoading(true);
+            try {
+                const users = await MockService.getAllUsers({
+                    query,
+                    college: selectedCollege,
+                    branch: selectedBranch,
+                    year: selectedYear
+                });
+                setFilteredUsers(users);
+            } catch (error) {
+                console.error("Failed to fetch users", error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-        // 1. Text Search
-        if (query.trim()) {
-            const lowerQuery = query.toLowerCase();
-            result = result.filter(user =>
-                user.name.toLowerCase().includes(lowerQuery) ||
-                user.username.toLowerCase().includes(lowerQuery) ||
-                user.college?.toLowerCase().includes(lowerQuery) ||
-                user.branch?.toLowerCase().includes(lowerQuery)
-            );
-        }
+        const timer = setTimeout(() => {
+            fetchUsers();
+        }, 300);
 
-        // 2. College Filter
-        if (selectedCollege && selectedCollege !== 'all') {
-            result = result.filter(user => user.college === selectedCollege);
-        }
-
-        // 3. Year Filter
-        if (selectedYear && selectedYear !== 'all') {
-            result = result.filter(user => user.year === selectedYear);
-        }
-
-        // 4. Branch Filter
-        if (selectedBranch && selectedBranch !== 'all') {
-            result = result.filter(user => user.branch === selectedBranch);
-        }
-
-        setFilteredUsers(result);
-    }, [query, allUsers, selectedCollege, selectedYear, selectedBranch]);
+        return () => clearTimeout(timer);
+    }, [query, selectedCollege, selectedBranch, selectedYear]);
 
     const handleConnect = async (userId: string) => {
         const currentUserId = localStorage.getItem('cc_user_id');
         if (!currentUserId) return;
         await MockService.sendConnectionRequest(currentUserId, userId);
         setAlertOpen(true);
+
+        // Optimistically update connection status
+        setConnectionMap(prev => ({
+            ...prev,
+            [userId]: 'pending'
+        }));
     };
 
     const clearFilters = () => {

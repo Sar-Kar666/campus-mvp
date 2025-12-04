@@ -86,9 +86,35 @@ export const MockService = {
         }
     },
 
-    getAllUsers: async (): Promise<User[]> => {
+    getAllUsers: async (filters?: { query?: string; college?: string; branch?: string; year?: string }): Promise<User[]> => {
         if (!supabase) return [];
-        const { data } = await supabase.from('users').select('*');
+
+        let queryBuilder = supabase.from('users').select('*');
+
+        if (filters?.query) {
+            const q = filters.query.toLowerCase();
+            queryBuilder = queryBuilder.or(`name.ilike.%${q}%,username.ilike.%${q}%`);
+        }
+
+        if (filters?.college && filters.college !== 'all') {
+            queryBuilder = queryBuilder.eq('college', filters.college);
+        }
+
+        if (filters?.branch && filters.branch !== 'all') {
+            queryBuilder = queryBuilder.eq('branch', filters.branch);
+        }
+
+        if (filters?.year && filters.year !== 'all') {
+            queryBuilder = queryBuilder.eq('year', filters.year);
+        }
+
+        const { data, error } = await queryBuilder;
+
+        if (error) {
+            console.error('Error fetching users:', error);
+            return [];
+        }
+
         return (data as User[]) || [];
     },
 
