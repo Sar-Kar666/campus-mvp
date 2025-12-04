@@ -32,7 +32,11 @@ export default function HomePage() {
             ) : (
                 <div className="flex flex-col">
                     {posts.map((post) => (
-                        <FeedPost key={post.id} post={post} />
+                        <FeedPost
+                            key={post.id}
+                            post={post}
+                            onDelete={() => setPosts(posts.filter(p => p.id !== post.id))}
+                        />
                     ))}
                 </div>
             )}

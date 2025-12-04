@@ -107,6 +107,20 @@ export const MockService = {
         return data as User;
     },
 
+    getUsersByIds: async (userIds: string[]): Promise<User[]> => {
+        if (!supabase || userIds.length === 0) return [];
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .in('id', userIds);
+
+        if (error) {
+            console.error('[MockService] Error fetching users by IDs:', error);
+            return [];
+        }
+        return (data as User[]) || [];
+    },
+
     getConnections: async (userId: string): Promise<Connection[]> => {
         if (!supabase) return [];
         const { data } = await supabase
@@ -130,6 +144,46 @@ export const MockService = {
         await supabase
             .from('connections')
             .update({ status })
+            .eq('id', connectionId);
+    },
+
+    getPendingConnections: async (userId: string): Promise<any[]> => {
+        if (!supabase) return [];
+        const { data, error } = await supabase
+            .from('connections')
+            .select(`
+                *,
+                requester:users!requester_id (
+                    id,
+                    name,
+                    username,
+                    profile_image,
+                    college
+                )
+            `)
+            .eq('receiver_id', userId)
+            .eq('status', 'pending');
+
+        if (error) {
+            console.error('Error fetching pending connections:', error);
+            return [];
+        }
+        return data || [];
+    },
+
+    acceptConnection: async (connectionId: string) => {
+        if (!supabase) return;
+        await supabase
+            .from('connections')
+            .update({ status: 'accepted' })
+            .eq('id', connectionId);
+    },
+
+    rejectConnection: async (connectionId: string) => {
+        if (!supabase) return;
+        await supabase
+            .from('connections')
+            .update({ status: 'rejected' })
             .eq('id', connectionId);
     },
 
@@ -162,47 +216,61 @@ export const MockService = {
         return data || [];
     },
 
-    uploadUserPhoto: async (userId: string, file: File): Promise<{ success: boolean; error?: string }> => {
+    createPost: async (userId: string, content: string, file?: File): Promise<{ success: boolean; error?: string }> => {
         if (!supabase) return { success: false, error: 'Supabase not initialized' };
 
-        // 1. Check count
+        // 1. Check count (optional, maybe relax for text posts?)
+        // Keeping strict for now to prevent spam
         const { count } = await supabase
             .from('photos')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', userId);
 
-        if (count !== null && count >= 5) {
-            return { success: false, error: 'Maximum 5 photos allowed' };
+        if (count !== null && count >= 20) { // Increased limit for text posts
+            return { success: false, error: 'Maximum 20 posts allowed' };
         }
 
-        // 2. Upload to Storage
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${userId}/${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-            .from('user-photos')
-            .upload(fileName, file);
+        let publicUrl = null;
 
-        if (uploadError) {
-            console.error('Upload error:', uploadError);
-            return { success: false, error: 'Failed to upload image' };
+        // 2. Upload to Storage if file exists
+        if (file) {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${userId}/${Math.random().toString(36).substring(2)}.${fileExt}`;
+            const { error: uploadError } = await supabase.storage
+                .from('user-photos')
+                .upload(fileName, file);
+
+            if (uploadError) {
+                console.error('Upload error:', uploadError);
+                return { success: false, error: 'Failed to upload image' };
+            }
+
+            const { data } = supabase.storage
+                .from('user-photos')
+                .getPublicUrl(fileName);
+            publicUrl = data.publicUrl;
         }
 
-        // 3. Get Public URL
-        const { data: { publicUrl } } = supabase.storage
-            .from('user-photos')
-            .getPublicUrl(fileName);
-
-        // 4. Insert into DB
+        // 3. Insert into DB
         const { error: dbError } = await supabase
             .from('photos')
-            .insert([{ user_id: userId, url: publicUrl }]);
+            .insert([{
+                user_id: userId,
+                url: publicUrl, // Can be null now
+                caption: content
+            }]);
 
         if (dbError) {
             console.error('DB Insert error:', dbError);
-            return { success: false, error: 'Failed to save photo record' };
+            return { success: false, error: 'Failed to save post' };
         }
 
         return { success: true };
+    },
+
+    // Deprecated but kept for compatibility if needed, redirects to createPost
+    uploadUserPhoto: async (userId: string, file: File, caption?: string): Promise<{ success: boolean; error?: string }> => {
+        return MockService.createPost(userId, caption || '', file);
     },
 
     deleteUserPhoto: async (photoId: string): Promise<void> => {
@@ -389,5 +457,68 @@ export const MockService = {
             return { comments: [] };
         }
         return { comments: data || [] };
+    },
+
+    getConversations: async (userId: string): Promise<any[]> => {
+        if (!supabase) return [];
+
+        // 1. Fetch all messages involving the user
+        const { data: messages, error } = await supabase
+            .from('messages')
+            .select('*')
+            .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+            .order('created_at', { ascending: false });
+
+        if (error || !messages) {
+            console.error('Error fetching conversations:', error);
+            return [];
+        }
+
+        // 2. Group by other user
+        const conversationMap = new Map();
+
+        for (const msg of messages) {
+            const otherId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
+
+            if (!conversationMap.has(otherId)) {
+                conversationMap.set(otherId, {
+                    otherUserId: otherId,
+                    lastMessage: msg,
+                    unreadCount: 0
+                });
+            }
+
+            // Count unread if I am the receiver
+            if (msg.receiver_id === userId && !msg.is_read) {
+                const conv = conversationMap.get(otherId);
+                conv.unreadCount += 1;
+            }
+        }
+
+        // 3. Fetch user details for all conversation partners
+        const otherUserIds = Array.from(conversationMap.keys());
+        if (otherUserIds.length === 0) return [];
+
+        const { data: users } = await supabase
+            .from('users')
+            .select('*')
+            .in('id', otherUserIds);
+
+        if (!users) return [];
+
+        // 4. Combine data
+        const conversations = users.map(user => {
+            const conv = conversationMap.get(user.id);
+            return {
+                user,
+                lastMessage: conv.lastMessage,
+                unreadCount: conv.unreadCount
+            };
+        });
+
+        // 5. Sort by last message time
+        return conversations.sort((a, b) =>
+            new Date(b.lastMessage.created_at).getTime() - new Date(a.lastMessage.created_at).getTime()
+        );
     },
 };

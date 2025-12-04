@@ -90,7 +90,7 @@ export default function ChatScreen() {
                     return (
                         <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                             <div
-                                className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border text-gray-800 rounded-bl-none'
+                                className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border text-gray-900 rounded-bl-none'
                                     }`}
                             >
                                 {msg.content}
@@ -111,7 +111,7 @@ export default function ChatScreen() {
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Type a message..."
-                        className="flex-1"
+                        className="flex-1 text-gray-900 placeholder:text-gray-500"
                     />
                     <Button type="submit" size="icon" disabled={!newMessage.trim()}>
                         <Send size={18} />
