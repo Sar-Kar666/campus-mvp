@@ -37,7 +37,8 @@ export default function OnboardingPage() {
         // Check if already logged in
         const checkUser = async () => {
             const user = await MockService.getCurrentUser();
-            if (user) {
+            // Only redirect if user exists AND has completed onboarding (college is not Unknown)
+            if (user && user.college !== 'Unknown') {
                 router.push('/discover');
             }
         };
@@ -70,9 +71,9 @@ export default function OnboardingPage() {
                 return;
             }
 
-            // Check if user profile exists
+            // Check if user profile exists and is complete
             const user = await MockService.getCurrentUser();
-            if (user) {
+            if (user && user.college !== 'Unknown') {
                 router.push('/discover');
                 return;
             }
@@ -87,8 +88,21 @@ export default function OnboardingPage() {
     const handleFinish = async () => {
         setLoading(true);
         // Get the auth user ID from session if available, or fallback to random (for mock)
+        // Get the auth user ID from session
         const session = await AuthService.getSession();
-        const userId = session?.user?.id || Math.random().toString(36).substr(2, 9);
+        let userId = session?.user?.id;
+
+        if (!userId) {
+            // Fallback: try to get from current user (if session is active but getSession returned null for some reason)
+            const currentUser = await MockService.getCurrentUser();
+            userId = currentUser?.id;
+        }
+
+        if (!userId) {
+            // Last resort fallback (should not happen in real auth flow)
+            userId = Math.random().toString(36).substr(2, 9);
+            console.warn('Using random user ID for onboarding save - this may cause issues if auth is active');
+        }
 
         const newUser = {
             id: userId,
