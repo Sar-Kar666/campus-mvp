@@ -61,7 +61,7 @@ export function TopNav() {
         <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
             <div className="flex justify-between items-center h-14 max-w-md mx-auto px-4">
                 <Link href="/home" className="text-xl font-bold font-serif tracking-wide text-black">
-                    College Connect
+                    togl
                 </Link>
 
                 <div className="flex items-center space-x-1">

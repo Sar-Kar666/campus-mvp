@@ -23,6 +23,7 @@ interface FeedPostProps {
             name: string;
             profile_image: string;
             college: string;
+            year?: string;
             username?: string;
         };
     };
@@ -140,7 +141,9 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
                     />
                     <div>
                         <p className="text-sm font-semibold text-gray-900">{user.username}</p>
-                        <p className="text-[10px] text-gray-500">{user.college}</p>
+                        <p className="text-[10px] text-gray-500">
+                            {user.college} {user.year ? `• ${user.year}` : ''}
+                        </p>
                     </div>
                 </Link>
 

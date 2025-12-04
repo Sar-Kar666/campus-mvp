@@ -128,7 +128,7 @@ export default function OnboardingPage() {
             <Card className="w-full max-w-md">
                 <CardHeader>
                     <CardTitle className="text-center text-blue-600 text-2xl font-bold">
-                        {step === 0 ? 'Welcome to Campus Connect' :
+                        {step === 0 ? 'Welcome to togl' :
                             step === 1 ? 'Login' :
                                 step === 2 ? 'Verify OTP' :
                                     step === 3 ? 'Academic Details' : 'Create Profile'}

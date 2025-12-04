@@ -321,7 +321,8 @@ export const MockService = {
                     name,
                     username,
                     profile_image,
-                    college
+                    college,
+                    year
                 )
             `)
             .order('created_at', { ascending: false })

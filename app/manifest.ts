@@ -2,8 +2,8 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Campus Connect',
-    short_name: 'CampusConnect',
+    name: 'togl',
+    short_name: 'togl',
     description: 'Connect with students from your college, branch, and year.',
     start_url: '/',
     display: 'standalone',
