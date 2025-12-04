@@ -128,7 +128,42 @@ export default function ChatScreen() {
                                 className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border text-gray-900 rounded-bl-none'
                                     }`}
                             >
-                                {msg.content.startsWith('SHARED_POST::') ? (() => {
+                                {msg.content.trim().startsWith('MENTION_POST::') ? (() => {
+                                    const parts = msg.content.split('::');
+                                    const postId = parts[1];
+                                    const postUrl = parts[2];
+                                    const postOwner = parts[3];
+                                    const comment = parts[4];
+                                    const commenter = parts[5];
+                                    const commenterImage = parts[6];
+
+                                    return (
+                                        <div
+                                            className="flex flex-col cursor-pointer"
+                                            onClick={() => router.push(`/post/${postId}`)}
+                                        >
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <img
+                                                    src={commenterImage || `https://ui-avatars.com/api/?name=${commenter}`}
+                                                    alt={commenter}
+                                                    className="w-5 h-5 rounded-full object-cover"
+                                                />
+                                                <span className="font-bold text-xs">{commenter} mentioned you:</span>
+                                            </div>
+                                            <div className="relative aspect-square w-48 bg-gray-100 rounded-lg overflow-hidden mb-2">
+                                                <img
+                                                    src={postUrl}
+                                                    alt="Post"
+                                                    className="w-full h-full object-cover"
+                                                    loading="lazy"
+                                                />
+                                            </div>
+                                            <div className="bg-gray-100 p-2 rounded text-xs text-gray-800 border-l-2 border-blue-500">
+                                                "{comment}"
+                                            </div>
+                                        </div>
+                                    );
+                                })() : msg.content.trim().startsWith('SHARED_POST::') ? (() => {
                                     const parts = msg.content.split('::');
                                     const postId = parts[1];
                                     const postUrl = parts[2];

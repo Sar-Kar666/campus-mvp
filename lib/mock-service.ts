@@ -444,12 +444,26 @@ export const MockService = {
                     .in('username', uniqueUsernames);
 
                 if (mentionedUsers) {
+                    // Fetch post details for the preview
+                    const { data: postData } = await supabase
+                        .from('photos')
+                        .select('url, users(username)')
+                        .eq('id', photoId)
+                        .single();
+
                     for (const mentionedUser of mentionedUsers) {
                         if (mentionedUser.id !== userId) { // Don't notify self
+                            let message = `Mentioned you in a comment: "${content}"`;
+
+                            if (postData) {
+                                // MENTION_POST::postId::postUrl::postOwnerUsername::commentContent::commenterUsername::commenterImage
+                                message = `MENTION_POST::${photoId}::${postData.url}::${postData.users?.username}::${content}::${data.users?.username}::${data.users?.profile_image || ''}`;
+                            }
+
                             await MockService.sendMessage(
                                 userId,
                                 mentionedUser.id,
-                                `Mentioned you in a comment: "${content}"`
+                                message
                             );
                         }
                     }
