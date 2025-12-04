@@ -332,8 +332,12 @@ export const MockService = {
             .eq('is_read', false);
     },
 
-    getRecentPhotos: async (): Promise<any[]> => {
+    getRecentPhotos: async (page = 0, limit = 10): Promise<any[]> => {
         if (!supabase) return [];
+
+        const start = page * limit;
+        const end = start + limit - 1;
+
         const { data, error } = await supabase
             .from('photos')
             .select(`
@@ -348,7 +352,7 @@ export const MockService = {
                 )
             `)
             .order('created_at', { ascending: false })
-            .limit(50);
+            .range(start, end);
 
         if (error) {
             console.error('Error fetching recent photos:', error);

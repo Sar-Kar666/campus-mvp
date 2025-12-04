@@ -128,7 +128,50 @@ export default function ChatScreen() {
                                 className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border text-gray-900 rounded-bl-none'
                                     }`}
                             >
-                                {msg.content}
+                                {msg.content.startsWith('SHARED_POST::') ? (() => {
+                                    const parts = msg.content.split('::');
+                                    const postId = parts[1];
+                                    const postUrl = parts[2];
+                                    const username = parts[3];
+                                    const caption = parts[4];
+
+                                    return (
+                                        <div
+                                            className="flex flex-col cursor-pointer"
+                                            onClick={() => router.push(`/post/${postId}`)}
+                                        >
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="font-bold text-xs">{username}</span>
+                                            </div>
+                                            <div className="relative aspect-square w-48 bg-gray-100 rounded-lg overflow-hidden mb-2">
+                                                <img
+                                                    src={postUrl}
+                                                    alt="Shared post"
+                                                    className="w-full h-full object-cover"
+                                                    loading="lazy"
+                                                />
+                                            </div>
+                                            {caption && (
+                                                <p className="text-xs opacity-90 line-clamp-2">{caption}</p>
+                                            )}
+                                        </div>
+                                    );
+                                })() : msg.content.startsWith('Check out this post: ') ? (
+                                    // Legacy support for older messages
+                                    <div className="flex flex-col">
+                                        <span className="mb-2">Check out this post:</span>
+                                        <div className="relative aspect-square w-48 bg-gray-100 rounded-lg overflow-hidden">
+                                            <img
+                                                src={msg.content.replace('Check out this post: ', '')}
+                                                alt="Shared post"
+                                                className="w-full h-full object-cover"
+                                                loading="lazy"
+                                            />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    msg.content
+                                )}
                             </div>
                         </div>
                     );

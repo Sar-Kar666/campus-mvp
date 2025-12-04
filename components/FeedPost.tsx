@@ -30,11 +30,14 @@ interface FeedPostProps {
     onDelete?: () => void;
 }
 
+import { ShareModal } from './ShareModal';
+
 export function FeedPost({ post, onDelete }: FeedPostProps) {
     const user = post.users;
     const [liked, setLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(0);
     const [showComments, setShowComments] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
     const [comments, setComments] = useState<any[]>([]);
     const [newComment, setNewComment] = useState('');
     const [currentUser, setCurrentUser] = useState<any>(null);
@@ -213,7 +216,7 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
                         <button onClick={() => setShowComments(true)} className="hover:opacity-60 transition-opacity">
                             <MessageCircle size={24} className="text-black" />
                         </button>
-                        <button className="hover:opacity-60 transition-opacity">
+                        <button onClick={() => setShowShareModal(true)} className="hover:opacity-60 transition-opacity">
                             <Send size={24} className="text-black" />
                         </button>
                     </div>
@@ -299,6 +302,15 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <ShareModal
+                isOpen={showShareModal}
+                onClose={() => setShowShareModal(false)}
+                postUrl={post.url}
+                postId={post.id}
+                postUsername={user.username || 'User'}
+                postCaption={post.caption}
+            />
         </div>
     );
 }
