@@ -46,8 +46,30 @@ export const MockService = {
 
         console.log('[MockService] Saving user:', user);
 
-        // Use upsert to handle both create and update scenarios
-        // This avoids race conditions with the database trigger
+        // Explicitly handle update vs insert to ensure we update the correct row
+        if (user.id) {
+            console.log('[MockService] Updating existing user:', user.id);
+            const { data, error } = await supabase
+                .from('users')
+                .update(user)
+                .eq('id', user.id)
+                .select()
+                .single();
+
+            if (error) {
+                console.error('[MockService] Error updating user:', error);
+                return undefined;
+            }
+
+            if (data) {
+                console.log('[MockService] User updated successfully:', data);
+                localStorage.setItem(STORAGE_KEYS.USER_ID, data.id);
+                return data as User;
+            }
+        }
+
+        // If no ID, try upsert (or insert)
+        console.log('[MockService] Creating/Upserting user (no ID provided)');
         const { data, error } = await supabase
             .from('users')
             .upsert(user)
