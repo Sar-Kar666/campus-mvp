@@ -2,12 +2,15 @@
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.users (id, email, name, created_at)
+  INSERT INTO public.users (id, email, name, created_at, college, branch, year)
   VALUES (
     new.id,
     new.email,
     COALESCE(new.raw_user_meta_data->>'name', 'New User'),
-    new.created_at
+    new.created_at,
+    COALESCE(new.raw_user_meta_data->>'college', 'Unknown'),
+    COALESCE(new.raw_user_meta_data->>'branch', 'Unknown'),
+    COALESCE(new.raw_user_meta_data->>'year', '1st')
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN new;
