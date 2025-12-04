@@ -456,8 +456,15 @@ export const MockService = {
                             let message = `Mentioned you in a comment: "${content}"`;
 
                             if (postData) {
+                                const postUser = (postData as any).users;
+                                const postUsername = Array.isArray(postUser) ? postUser[0]?.username : postUser?.username;
+
+                                const commentUser = (data as any).users;
+                                const commentUsername = Array.isArray(commentUser) ? commentUser[0]?.username : commentUser?.username;
+                                const commentUserImage = Array.isArray(commentUser) ? commentUser[0]?.profile_image : commentUser?.profile_image;
+
                                 // MENTION_POST::postId::postUrl::postOwnerUsername::commentContent::commenterUsername::commenterImage
-                                message = `MENTION_POST::${photoId}::${postData.url}::${postData.users?.username}::${content}::${data.users?.username}::${data.users?.profile_image || ''}`;
+                                message = `MENTION_POST::${photoId}::${postData.url}::${postUsername}::${content}::${commentUsername}::${commentUserImage || ''}`;
                             }
 
                             await MockService.sendMessage(
@@ -498,6 +505,15 @@ export const MockService = {
             return { comments: [] };
         }
         return { comments: data || [] };
+    },
+
+    getCommentCount: async (photoId: string): Promise<{ count: number }> => {
+        if (!supabase) return { count: 0 };
+        const { count } = await supabase
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('photo_id', photoId);
+        return { count: count || 0 };
     },
 
     getConversations: async (userId: string): Promise<any[]> => {
