@@ -264,4 +264,94 @@ export const MockService = {
         }
         return data || [];
     },
+
+    toggleLike: async (photoId: string, userId: string) => {
+        if (!supabase) return;
+
+        // Check if already liked
+        const { data } = await supabase
+            .from('likes')
+            .select('*')
+            .eq('photo_id', photoId)
+            .eq('user_id', userId)
+            .single();
+
+        if (data) {
+            // Unlike
+            await supabase
+                .from('likes')
+                .delete()
+                .eq('photo_id', photoId)
+                .eq('user_id', userId);
+        } else {
+            // Like
+            await supabase
+                .from('likes')
+                .insert([{ photo_id: photoId, user_id: userId }]);
+        }
+    },
+
+    getLikes: async (photoId: string): Promise<{ count: number }> => {
+        if (!supabase) return { count: 0 };
+        const { count } = await supabase
+            .from('likes')
+            .select('*', { count: 'exact', head: true })
+            .eq('photo_id', photoId);
+        return { count: count || 0 };
+    },
+
+    hasLiked: async (photoId: string, userId: string): Promise<boolean> => {
+        if (!supabase) return false;
+        const { data } = await supabase
+            .from('likes')
+            .select('*')
+            .eq('photo_id', photoId)
+            .eq('user_id', userId)
+            .single();
+        return !!data;
+    },
+
+    addComment: async (photoId: string, userId: string, content: string) => {
+        if (!supabase) return { comment: null };
+        const { data, error } = await supabase
+            .from('comments')
+            .insert([{ photo_id: photoId, user_id: userId, content }])
+            .select(`
+                *,
+                users (
+                    id,
+                    name,
+                    profile_image
+                )
+            `)
+            .single();
+
+        if (error) {
+            console.error('Error adding comment:', error);
+            return { comment: null };
+        }
+        return { comment: data };
+    },
+
+    getComments: async (photoId: string): Promise<{ comments: any[] }> => {
+        if (!supabase) return { comments: [] };
+        const { data, error } = await supabase
+            .from('comments')
+            .select(`
+                *,
+                users (
+                    id,
+                    name,
+                    profile_image
+                )
+            `)
+            .eq('photo_id', photoId)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching comments:', error);
+            return { comments: [] };
+        }
+        return { comments: data || [] };
+    },
 };
