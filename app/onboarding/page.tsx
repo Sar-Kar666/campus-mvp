@@ -26,6 +26,7 @@ export default function OnboardingPage() {
         branch: '',
         year: '',
         name: '',
+        username: '',
         bio: '',
         interests: '',
     });
@@ -226,6 +227,14 @@ export default function OnboardingPage() {
                                 />
                             </div>
                             <div className="space-y-2">
+                                <label className="text-sm font-medium">Username</label>
+                                <Input
+                                    placeholder="johndoe"
+                                    value={formData.username}
+                                    onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/\s/g, '') })}
+                                />
+                            </div>
+                            <div className="space-y-2">
                                 <label className="text-sm font-medium">Bio (Optional)</label>
                                 <Input
                                     placeholder="Tell us about yourself"
@@ -279,7 +288,7 @@ export default function OnboardingPage() {
                         <Button
                             className="w-full"
                             onClick={handleFinish}
-                            disabled={!formData.name || loading}
+                            disabled={!formData.name || !formData.username || loading}
                         >
                             {loading ? 'Creating Profile...' : 'Complete Profile'}
                         </Button>

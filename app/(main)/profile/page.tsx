@@ -27,6 +27,7 @@ export default function ProfilePage() {
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({
         name: '',
+        username: '',
         bio: '',
         interests: '',
         profile_image: '',
@@ -79,6 +80,7 @@ export default function ProfilePage() {
                     setUser(currentUser);
                     setEditForm({
                         name: currentUser.name,
+                        username: currentUser.username || '',
                         bio: currentUser.bio || '',
                         interests: currentUser.interests.join(', '),
                         profile_image: currentUser.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.name}`,
@@ -121,6 +123,7 @@ export default function ProfilePage() {
             const updatedUser = {
                 ...user,
                 name: editForm.name,
+                username: editForm.username,
                 bio: editForm.bio,
                 interests: editForm.interests.split(',').map(i => i.trim()).filter(i => i),
                 profile_image: editForm.profile_image,
@@ -188,6 +191,7 @@ export default function ProfilePage() {
                         {!isEditing ? (
                             <div className="text-center">
                                 <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
+                                <p className="text-sm text-gray-500 font-medium">@{user.username}</p>
                                 <p className="text-sm text-gray-900 font-medium mt-1">
                                     {user.college === 'Unknown' ? 'College not set' : user.college} •
                                     {user.branch === 'Unknown' ? 'Branch not set' : user.branch} •
@@ -203,6 +207,16 @@ export default function ProfilePage() {
                                         value={editForm.name}
                                         onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                                         className="text-center font-bold"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-gray-900">Username</label>
+                                    <Input
+                                        id="username-input"
+                                        value={editForm.username}
+                                        onChange={(e) => setEditForm({ ...editForm, username: e.target.value.toLowerCase().replace(/\s/g, '') })}
+                                        className="text-center font-bold"
+                                        placeholder="username"
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 text-left">

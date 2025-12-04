@@ -217,7 +217,7 @@ export const MockService = {
         const { data } = await supabase
             .from('users')
             .select('*')
-            .or(`name.ilike.%${query}%,college.ilike.%${query}%,branch.ilike.%${query}%`)
+            .or(`name.ilike.%${query}%,username.ilike.%${query}%,college.ilike.%${query}%,branch.ilike.%${query}%`)
             .limit(20);
         return (data as User[]) || [];
     },
@@ -251,6 +251,7 @@ export const MockService = {
                 users (
                     id,
                     name,
+                    username,
                     profile_image,
                     college
                 )
@@ -311,16 +312,17 @@ export const MockService = {
         return !!data;
     },
 
-    addComment: async (photoId: string, userId: string, content: string) => {
+    addComment: async (photoId: string, userId: string, content: string, parentId?: string) => {
         if (!supabase) return { comment: null };
         const { data, error } = await supabase
             .from('comments')
-            .insert([{ photo_id: photoId, user_id: userId, content }])
+            .insert([{ photo_id: photoId, user_id: userId, content, parent_id: parentId }])
             .select(`
                 *,
                 users (
                     id,
                     name,
+                    username,
                     profile_image
                 )
             `)
@@ -330,6 +332,39 @@ export const MockService = {
             console.error('Error adding comment:', error);
             return { comment: null };
         }
+
+        // --- Mention Notification Logic ---
+        try {
+            const mentionRegex = /@(\w+)/g;
+            const matches = content.match(mentionRegex);
+
+            if (matches) {
+                const usernames = matches.map(m => m.substring(1)); // Remove @
+                const uniqueUsernames = [...new Set(usernames)];
+
+                // Find users by username
+                const { data: mentionedUsers } = await supabase
+                    .from('users')
+                    .select('id, username')
+                    .in('username', uniqueUsernames);
+
+                if (mentionedUsers) {
+                    for (const mentionedUser of mentionedUsers) {
+                        if (mentionedUser.id !== userId) { // Don't notify self
+                            await MockService.sendMessage(
+                                userId,
+                                mentionedUser.id,
+                                `Mentioned you in a comment: "${content}"`
+                            );
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Error sending mention notifications:', err);
+        }
+        // ----------------------------------
+
         return { comment: data };
     },
 
@@ -342,6 +377,7 @@ export const MockService = {
                 users (
                     id,
                     name,
+                    username,
                     profile_image
                 )
             `)

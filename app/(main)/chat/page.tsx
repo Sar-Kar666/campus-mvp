@@ -26,7 +26,10 @@ export default function ChatListPage() {
                     })
                     .filter((u): u is User => !!u);
 
-                setConnectedUsers(friends);
+                // Deduplicate friends by ID
+                const uniqueFriends = Array.from(new Map(friends.map(f => [f.id, f])).values());
+
+                setConnectedUsers(uniqueFriends);
             }
         };
         fetchData();

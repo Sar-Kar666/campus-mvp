@@ -46,7 +46,7 @@ export function FeedPost({ post }: FeedPostProps) {
     const [comments, setComments] = useState<any[]>([]);
     const [newComment, setNewComment] = useState('');
     const [currentUser, setCurrentUser] = useState<any>(null);
-    const [replyingTo, setReplyingTo] = useState<{ id: string; name: string } | null>(null);
+    const [replyingTo, setReplyingTo] = useState<{ id: string; name: string; username: string } | null>(null);
 
     useEffect(() => {
         const init = async () => {
@@ -88,6 +88,15 @@ export function FeedPost({ post }: FeedPostProps) {
         }
     };
 
+    const handleReply = (comment: any) => {
+        setReplyingTo({
+            id: comment.id,
+            name: comment.users?.name,
+            username: comment.users?.username || 'user'
+        });
+        setNewComment(`@${comment.users?.username || 'user'} `);
+    };
+
     const rootComments = comments.filter(c => !c.parent_id);
     const getReplies = (commentId: string) => comments.filter(c => c.parent_id === commentId);
 
@@ -99,12 +108,12 @@ export function FeedPost({ post }: FeedPostProps) {
             />
             <div className="flex-1">
                 <div className="flex items-baseline space-x-2">
-                    <span className="font-bold text-sm">{comment.users?.name}</span>
+                    <span className="font-bold text-sm">{comment.users?.name || comment.users?.username}</span>
                     <span className="text-xs text-gray-500">{formatDistanceToNow(new Date(comment.created_at))}</span>
                 </div>
                 <p className="text-sm text-gray-800">{comment.content}</p>
                 <button
-                    onClick={() => setReplyingTo({ id: comment.id, name: comment.users?.name })}
+                    onClick={() => handleReply(comment)}
                     className="text-xs text-gray-500 font-semibold mt-1 hover:text-gray-800"
                 >
                     Reply
@@ -202,15 +211,15 @@ export function FeedPost({ post }: FeedPostProps) {
                     <div className="p-3 border-t bg-white">
                         {replyingTo && (
                             <div className="flex justify-between items-center px-2 pb-2 text-xs text-gray-500">
-                                <span>Replying to <b>{replyingTo.name}</b></span>
-                                <button onClick={() => setReplyingTo(null)} className="text-black font-bold">Cancel</button>
+                                <span>Replying to <b>@{replyingTo.username}</b></span>
+                                <button onClick={() => { setReplyingTo(null); setNewComment(''); }} className="text-black font-bold">Cancel</button>
                             </div>
                         )}
                         <form onSubmit={handleCommentSubmit} className="flex items-center space-x-2">
                             <Input
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
-                                placeholder={replyingTo ? `Reply to ${replyingTo.name}...` : "Add a comment..."}
+                                placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Add a comment..."}
                                 className="flex-1 border-none focus-visible:ring-0 bg-gray-50"
                             />
                             <Button type="submit" variant="ghost" size="icon" disabled={!newComment.trim()}>
