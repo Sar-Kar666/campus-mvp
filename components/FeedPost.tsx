@@ -40,6 +40,7 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [replyingTo, setReplyingTo] = useState<{ id: string; name: string; username: string } | null>(null);
     const [showOptions, setShowOptions] = useState(false);
+    const [imageLoaded, setImageLoaded] = useState(false);
 
     useEffect(() => {
         const init = async () => {
@@ -172,11 +173,16 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
                 {post.url ? (
                     // Image Post
                     <div className="relative aspect-square bg-gray-100" onDoubleClick={handleLike}>
+                        {/* Image Loader */}
+                        <div className={`absolute inset-0 flex items-center justify-center bg-gray-100 transition-opacity duration-300 ${imageLoaded ? 'opacity-0' : 'opacity-100'}`}>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                        </div>
                         <img
                             src={post.url}
                             alt={post.caption || `Post by ${user.name}`}
-                            className="w-full h-full object-cover"
+                            className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                             loading="lazy"
+                            onLoad={() => setImageLoaded(true)}
                         />
                     </div>
                 ) : (

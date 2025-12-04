@@ -10,6 +10,38 @@ import { FeedPost } from '@/components/FeedPost';
 import { isGoldenUser } from '@/lib/constants';
 import { MockService } from '@/lib/mock-service';
 
+function PhotoGridItem({ photo, user, onClick }: { photo: any, user: User, onClick: () => void }) {
+    const [imageLoaded, setImageLoaded] = useState(false);
+
+    return (
+        <div
+            className="relative aspect-square group bg-gray-100 cursor-pointer"
+            onClick={onClick}
+        >
+            {photo.url ? (
+                <>
+                    <div className={`absolute inset-0 flex items-center justify-center bg-gray-100 transition-opacity duration-300 ${imageLoaded ? 'opacity-0' : 'opacity-100'}`}>
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                    </div>
+                    <img
+                        src={photo.url}
+                        alt="User photo"
+                        className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                        loading="lazy"
+                        onLoad={() => setImageLoaded(true)}
+                    />
+                </>
+            ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-black p-2 text-center">
+                    <p className="text-white text-[10px] leading-tight line-clamp-3 font-agbalumo" style={{ fontFamily: 'var(--font-agbalumo)' }}>
+                        {photo.caption}
+                    </p>
+                </div>
+            )}
+        </div>
+    );
+}
+
 interface ProfileViewProps {
     user: User;
     currentUser: User | null;
@@ -163,30 +195,11 @@ export function ProfileView({
                 <div className="space-y-2">
                     <div className="grid grid-cols-3 gap-px bg-white">
                         {initialPhotos.map((photo) => (
-                            <div
-                                key={photo.id}
-                                className="relative aspect-square group bg-gray-100 cursor-pointer"
-                                onClick={() => setSelectedPost({
-                                    ...photo,
-                                    created_at: new Date().toISOString(), // Fallback if not available
-                                    users: user
-                                })}
-                            >
-                                {photo.url ? (
-                                    <img
-                                        src={photo.url}
-                                        alt="User photo"
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    // @ts-ignore - caption might not exist on old type but we handle it
-                                    <div className="w-full h-full flex flex-col items-center justify-center bg-black p-2 text-center">
-                                        <p className="text-white text-[10px] leading-tight line-clamp-3 font-agbalumo" style={{ fontFamily: 'var(--font-agbalumo)' }}>
-                                            {(photo as any).caption}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
+                            <PhotoGridItem key={photo.id} photo={photo} user={user} onClick={() => setSelectedPost({
+                                ...photo,
+                                created_at: new Date().toISOString(),
+                                users: user
+                            })} />
                         ))}
                         {initialPhotos.length === 0 && (
                             <div className="col-span-3 text-center py-12 text-gray-400 text-sm">

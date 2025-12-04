@@ -19,7 +19,8 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
     if (!user) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-                <p>User not found</p>
+                <p className="text-xl font-semibold">User not found</p>
+                <p className="text-sm text-gray-500">ID: {userId}</p>
                 <Link href="/home">
                     <Button>Go Home</Button>
                 </Link>

@@ -522,9 +522,10 @@ export const MockService = {
         // 1. Fetch all messages involving the user
         const { data: messages, error } = await supabase
             .from('messages')
-            .select('*')
+            .select('id, sender_id, receiver_id, content, created_at, is_read')
             .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(1000); // Limit to recent history for performance
 
         if (error || !messages) {
             console.error('Error fetching conversations:', error);

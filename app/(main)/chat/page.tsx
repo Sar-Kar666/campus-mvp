@@ -3,28 +3,58 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { MockService } from '@/lib/mock-service';
-import { User, Connection } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ChatListPage() {
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [currentUser, setCurrentUser] = useState<any>(null);
     const [conversations, setConversations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
-            const user = await MockService.getCurrentUser();
-            if (user) {
-                setCurrentUser(user);
-                const data = await MockService.getConversations(user.id);
-                setConversations(data);
+            try {
+                const user = await MockService.getCurrentUser();
+                if (user) {
+                    setCurrentUser(user);
+                    const data = await MockService.getConversations(user.id);
+                    setConversations(data);
+                } else {
+                    setCurrentUser(null); // Ensure currentUser is null if not logged in
+                }
+            } catch (error) {
+                console.error("Failed to fetch chat data:", error);
+                // Optionally handle error state
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
         fetchData();
     }, []);
 
-    if (loading) return <div className="p-4 text-center">Loading chats...</div>;
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 p-4 space-y-4">
+                <Skeleton className="h-8 w-32 mb-4" />
+                {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="bg-white p-4 rounded-xl border border-gray-100 flex items-center space-x-3">
+                        <Skeleton className="h-12 w-12 rounded-full" />
+                        <div className="flex-1 space-y-2">
+                            <div className="flex justify-between">
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-3 w-12" />
+                            </div>
+                            <Skeleton className="h-3 w-3/4" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    if (!currentUser) {
+        return <div className="p-4 text-center">Please log in to view messages.</div>;
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 space-y-4">

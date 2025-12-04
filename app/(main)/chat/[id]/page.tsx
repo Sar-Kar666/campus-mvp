@@ -28,22 +28,25 @@ export default function ChatScreen() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const user = await MockService.getCurrentUser();
-            if (user) {
-                setCurrentUser(user);
-                const allUsers = await MockService.getAllUsers();
-                const friend = allUsers.find(u => u.id === otherUserId);
-                setOtherUser(friend || null);
+            // 1. Start fetching both users in parallel
+            const [user, friend] = await Promise.all([
+                MockService.getCurrentUser(),
+                MockService.getUserById(otherUserId)
+            ]);
 
-                // Load initial messages
+            if (user && friend) {
+                setCurrentUser(user);
+                setOtherUser(friend);
+
+                // 2. Fetch initial messages
                 const initialMessages = await MockService.getMessages(user.id, otherUserId);
                 setMessages(initialMessages);
 
-                // Mark messages as read
+                // 3. Mark as read
                 markMessagesAsRead(user.id, otherUserId);
                 refreshUnread();
 
-                // Poll for new messages (simulating real-time)
+                // 4. Start polling
                 const interval = setInterval(async () => {
                     const newMessages = await MockService.getMessages(user.id, otherUserId);
                     setMessages(prev => {
