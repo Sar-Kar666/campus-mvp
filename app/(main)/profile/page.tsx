@@ -61,6 +61,7 @@ export default function ProfilePage() {
     }, [router]);
 
     const handleLogout = async () => {
+        if (!confirm('Are you sure you want to logout?')) return;
         await AuthService.signOut();
         localStorage.removeItem('cc_user_id'); // Clear local storage fallback
         router.push('/onboarding');
@@ -119,8 +120,8 @@ export default function ProfilePage() {
                     <CardTitle>My Profile</CardTitle>
                     <div className="flex items-center gap-2">
                         {!isEditing && (
-                            <Button id="edit-profile-btn" variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                                <Edit2 size={16} className="mr-2" /> Edit Profile
+                            <Button id="edit-profile-btn" variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
+                                <Edit2 size={20} />
                             </Button>
                         )}
                         <Button variant="ghost" size="icon" onClick={handleLogout} className="text-red-500">
@@ -152,7 +153,7 @@ export default function ProfilePage() {
                         {!isEditing ? (
                             <div className="text-center">
                                 <h2 className="text-xl font-bold">{user.name}</h2>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-sm text-gray-700 font-medium">
                                     {user.college === 'Unknown' ? 'College not set' : user.college} •
                                     {user.branch === 'Unknown' ? 'Branch not set' : user.branch} •
                                     {user.year}
@@ -161,7 +162,7 @@ export default function ProfilePage() {
                         ) : (
                             <div className="w-full max-w-xs space-y-3">
                                 <div className="space-y-1">
-                                    <label className="text-xs font-medium text-gray-500">Name</label>
+                                    <label className="text-xs font-bold text-gray-900">Name</label>
                                     <Input
                                         id="name-input"
                                         value={editForm.name}
@@ -171,7 +172,7 @@ export default function ProfilePage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 text-left">
                                     <div className="space-y-1">
-                                        <label className="text-xs font-medium text-gray-500">College</label>
+                                        <label className="text-xs font-bold text-gray-900">College</label>
                                         <Select
                                             value={editForm.college}
                                             onChange={(e) => setEditForm({ ...editForm, college: e.target.value })}
@@ -181,7 +182,7 @@ export default function ProfilePage() {
                                         </Select>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-medium text-gray-500">Branch</label>
+                                        <label className="text-xs font-bold text-gray-900">Branch</label>
                                         <Select
                                             value={editForm.branch}
                                             onChange={(e) => setEditForm({ ...editForm, branch: e.target.value })}
@@ -191,7 +192,7 @@ export default function ProfilePage() {
                                         </Select>
                                     </div>
                                     <div className="space-y-1 col-span-2">
-                                        <label className="text-xs font-medium text-gray-500">Year</label>
+                                        <label className="text-xs font-bold text-gray-900">Year</label>
                                         <Select
                                             value={editForm.year}
                                             onChange={(e) => setEditForm({ ...editForm, year: e.target.value })}
@@ -207,10 +208,10 @@ export default function ProfilePage() {
 
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                            <label className="text-sm font-medium text-gray-500">Bio</label>
+                            <label className="text-sm font-bold text-gray-900">Bio</label>
                         </div>
                         {!isEditing ? (
-                            <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md">
+                            <p className="text-sm text-gray-800 bg-gray-50 p-3 rounded-md border border-gray-100">
                                 {user.bio || 'No bio added yet.'}
                             </p>
                         ) : (
@@ -224,7 +225,7 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-500">Interests</label>
+                        <label className="text-sm font-bold text-gray-900">Interests</label>
                         {!isEditing ? (
                             <div className="flex flex-wrap gap-2">
                                 {user.interests.map((interest, i) => (
