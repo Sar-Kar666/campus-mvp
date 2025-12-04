@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, Edit2, Save } from 'lucide-react';
+import { LogOut, Edit2, Save, Trash2 } from 'lucide-react';
 import { Select } from '@/components/ui/select';
 import { College, Branch, Year } from '@/types';
 
@@ -32,6 +32,40 @@ export default function ProfilePage() {
         branch: '',
         year: '',
     });
+    const [photos, setPhotos] = useState<{ id: string; url: string }[]>([]);
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+    const fetchPhotos = async (userId: string) => {
+        const userPhotos = await MockService.getUserPhotos(userId);
+        setPhotos(userPhotos);
+    };
+
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !e.target.files[0] || !user) return;
+        setUploadingPhoto(true);
+        try {
+            const result = await MockService.uploadUserPhoto(user.id, e.target.files[0]);
+            if (result.success) {
+                await fetchPhotos(user.id);
+            } else {
+                alert(result.error || 'Failed to upload photo');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+        } finally {
+            setUploadingPhoto(false);
+        }
+    };
+
+    const handlePhotoDelete = async (photoId: string) => {
+        if (!confirm('Delete this photo?') || !user) return;
+        try {
+            await MockService.deleteUserPhoto(photoId);
+            await fetchPhotos(user.id);
+        } catch (error) {
+            console.error('Delete error:', error);
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -48,6 +82,7 @@ export default function ProfilePage() {
                         branch: currentUser.branch === 'Unknown' ? '' : currentUser.branch,
                         year: currentUser.year === '1st' && currentUser.college === 'Unknown' ? '' : currentUser.year, // Handle default logic
                     });
+                    fetchPhotos(currentUser.id);
                 } else {
                     router.push('/onboarding');
                 }
@@ -240,6 +275,50 @@ export default function ProfilePage() {
                                 placeholder="Comma separated interests (e.g. Coding, Music)"
                             />
                         )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                            <label className="text-sm font-bold text-gray-900">Photos ({photos.length}/5)</label>
+                            {!isEditing && photos.length < 5 && (
+                                <div className="relative">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        onChange={handlePhotoUpload}
+                                        disabled={uploadingPhoto}
+                                    />
+                                    <Button size="sm" variant="outline" disabled={uploadingPhoto}>
+                                        {uploadingPhoto ? 'Uploading...' : 'Add Photo'}
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                            {photos.map((photo) => (
+                                <div key={photo.id} className="relative aspect-square group">
+                                    <img
+                                        src={photo.url}
+                                        alt="User photo"
+                                        className="w-full h-full object-cover rounded-md"
+                                    />
+                                    {!isEditing && (
+                                        <button
+                                            onClick={() => handlePhotoDelete(photo.id)}
+                                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                            {photos.length === 0 && (
+                                <div className="col-span-3 text-center py-4 text-gray-500 text-sm">
+                                    No photos uploaded yet.
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {isEditing && (

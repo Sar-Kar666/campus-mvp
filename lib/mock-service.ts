@@ -151,4 +151,64 @@ export const MockService = {
             content
         }]);
     },
+
+    getUserPhotos: async (userId: string): Promise<{ id: string; url: string }[]> => {
+        if (!supabase) return [];
+        const { data } = await supabase
+            .from('photos')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+        return data || [];
+    },
+
+    uploadUserPhoto: async (userId: string, file: File): Promise<{ success: boolean; error?: string }> => {
+        if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+        // 1. Check count
+        const { count } = await supabase
+            .from('photos')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId);
+
+        if (count !== null && count >= 5) {
+            return { success: false, error: 'Maximum 5 photos allowed' };
+        }
+
+        // 2. Upload to Storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${userId}/${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+            .from('user-photos')
+            .upload(fileName, file);
+
+        if (uploadError) {
+            console.error('Upload error:', uploadError);
+            return { success: false, error: 'Failed to upload image' };
+        }
+
+        // 3. Get Public URL
+        const { data: { publicUrl } } = supabase.storage
+            .from('user-photos')
+            .getPublicUrl(fileName);
+
+        // 4. Insert into DB
+        const { error: dbError } = await supabase
+            .from('photos')
+            .insert([{ user_id: userId, url: publicUrl }]);
+
+        if (dbError) {
+            console.error('DB Insert error:', dbError);
+            return { success: false, error: 'Failed to save photo record' };
+        }
+
+        return { success: true };
+    },
+
+    deleteUserPhoto: async (photoId: string): Promise<void> => {
+        if (!supabase) return;
+        // Note: We should technically delete from storage too, but for MVP just deleting DB record is safer/easier
+        // to avoid complex path parsing. RLS will prevent unauthorized deletion.
+        await supabase.from('photos').delete().eq('id', photoId);
+    },
 };

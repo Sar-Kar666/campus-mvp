@@ -16,6 +16,7 @@ export default function PublicProfilePage() {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [connectionStatus, setConnectionStatus] = useState<'pending' | 'accepted' | 'rejected' | 'none'>('none');
+    const [photos, setPhotos] = useState<{ id: string; url: string }[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -30,6 +31,9 @@ export default function PublicProfilePage() {
 
                 if (fetchedUser) {
                     setUser(fetchedUser);
+                    // Fetch photos for the displayed user
+                    const userPhotos = await MockService.getUserPhotos(userId);
+                    setPhotos(userPhotos);
                 }
 
                 if (loggedInUser) {
@@ -139,6 +143,26 @@ export default function PublicProfilePage() {
                                 <Badge key={i} className="bg-gray-900 text-white hover:bg-gray-800">{interest}</Badge>
                             ))}
                             {user.interests.length === 0 && <span className="text-sm text-gray-400">No interests listed</span>}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-900">Photos</label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {photos.map((photo) => (
+                                <div key={photo.id} className="relative aspect-square">
+                                    <img
+                                        src={photo.url}
+                                        alt="User photo"
+                                        className="w-full h-full object-cover rounded-md"
+                                    />
+                                </div>
+                            ))}
+                            {photos.length === 0 && (
+                                <div className="col-span-3 text-center py-4 text-gray-500 text-sm">
+                                    No photos uploaded.
+                                </div>
+                            )}
                         </div>
                     </div>
                 </CardContent>
