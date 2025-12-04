@@ -14,9 +14,10 @@ interface ShareModalProps {
     postId: string;
     postUsername: string;
     postCaption?: string;
+    postUserImage?: string;
 }
 
-export function ShareModal({ isOpen, onClose, postUrl, postId, postUsername, postCaption }: ShareModalProps) {
+export function ShareModal({ isOpen, onClose, postUrl, postId, postUsername, postCaption, postUserImage }: ShareModalProps) {
     const [query, setQuery] = useState('');
     const [connections, setConnections] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
@@ -65,8 +66,8 @@ export function ShareModal({ isOpen, onClose, postUrl, postId, postUsername, pos
         const currentUser = await MockService.getCurrentUser();
         if (!currentUser) return;
 
-        // Structured message format: SHARED_POST::postId::postUrl::username::caption
-        const message = `SHARED_POST::${postId}::${postUrl}::${postUsername}::${postCaption || ''}`;
+        // Structured message format: SHARED_POST::postId::postUrl::username::caption::userImage
+        const message = `SHARED_POST::${postId}::${postUrl}::${postUsername}::${postCaption || ''}::${postUserImage || ''}`;
 
         await MockService.sendMessage(currentUser.id, user.id, message);
 

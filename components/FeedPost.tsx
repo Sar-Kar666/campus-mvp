@@ -220,9 +220,7 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
                             <Send size={24} className="text-black" />
                         </button>
                     </div>
-                    <button className="hover:opacity-60 transition-opacity">
-                        <Bookmark size={24} className="text-black" />
-                    </button>
+
                 </div>
 
                 {/* Likes */}
@@ -310,6 +308,7 @@ export function FeedPost({ post, onDelete }: FeedPostProps) {
                 postId={post.id}
                 postUsername={user.username || 'User'}
                 postCaption={post.caption}
+                postUserImage={user.profile_image}
             />
         </div>
     );

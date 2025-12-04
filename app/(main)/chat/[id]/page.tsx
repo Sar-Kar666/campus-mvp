@@ -134,6 +134,9 @@ export default function ChatScreen() {
                                     const postUrl = parts[2];
                                     const username = parts[3];
                                     const caption = parts[4];
+                                    const userImage = parts[5];
+
+                                    const isTextPost = !postUrl || postUrl === 'undefined' || postUrl === 'null' || postUrl === '';
 
                                     return (
                                         <div
@@ -141,18 +144,34 @@ export default function ChatScreen() {
                                             onClick={() => router.push(`/post/${postId}`)}
                                         >
                                             <div className="flex items-center gap-2 mb-2">
+                                                <img
+                                                    src={userImage || `https://ui-avatars.com/api/?name=${username}`}
+                                                    alt={username}
+                                                    className="w-5 h-5 rounded-full object-cover"
+                                                />
                                                 <span className="font-bold text-xs">{username}</span>
                                             </div>
-                                            <div className="relative aspect-square w-48 bg-gray-100 rounded-lg overflow-hidden mb-2">
-                                                <img
-                                                    src={postUrl}
-                                                    alt="Shared post"
-                                                    className="w-full h-full object-cover"
-                                                    loading="lazy"
-                                                />
-                                            </div>
-                                            {caption && (
-                                                <p className="text-xs opacity-90 line-clamp-2">{caption}</p>
+
+                                            {isTextPost ? (
+                                                <div className="relative aspect-square w-48 bg-black rounded-lg overflow-hidden mb-2 flex flex-col items-center justify-center p-4 text-center">
+                                                    <p className="text-white text-sm leading-relaxed line-clamp-6" style={{ fontFamily: 'var(--font-agbalumo)' }}>
+                                                        {caption}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="relative aspect-square w-48 bg-gray-100 rounded-lg overflow-hidden mb-2">
+                                                        <img
+                                                            src={postUrl}
+                                                            alt="Shared post"
+                                                            className="w-full h-full object-cover"
+                                                            loading="lazy"
+                                                        />
+                                                    </div>
+                                                    {caption && (
+                                                        <p className="text-xs opacity-90 line-clamp-2">{caption}</p>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     );
