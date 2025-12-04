@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { MockService } from '@/lib/mock-service';
 import { User } from '@/types';
@@ -41,6 +41,7 @@ export default function ProfilePage() {
     const [connectionCount, setConnectionCount] = useState(0);
     const [photos, setPhotos] = useState<{ id: string; url: string | null; caption?: string }[]>([]);
     const [selectedPost, setSelectedPost] = useState<any>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const fetchPhotos = async (userId: string) => {
         const userPhotos = await MockService.getUserPhotos(userId);
@@ -91,13 +92,7 @@ export default function ProfilePage() {
         router.push('/onboarding');
     };
 
-    const handleRegenerateAvatar = () => {
-        const randomSeed = Math.random().toString(36).substring(7);
-        setEditForm(prev => ({
-            ...prev,
-            profile_image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${randomSeed}`
-        }));
-    };
+
 
     const handleSave = async () => {
         if (!user) return;
@@ -155,6 +150,29 @@ export default function ProfilePage() {
         return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
     }
 
+
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user) return;
+
+        // Optimistic update (optional, but let's wait for upload)
+        const toastId = toast.loading("Uploading image...");
+
+        const { success, url, error } = await MockService.uploadProfilePicture(user.id, file);
+
+        if (success && url) {
+            setEditForm(prev => ({ ...prev, profile_image: url }));
+            toast.success("Image uploaded!", { id: toastId });
+        } else {
+            toast.error(error || "Failed to upload image", { id: toastId });
+        }
+    };
+
+    const handleCameraClick = () => {
+        fileInputRef.current?.click();
+    };
+
     if (!user) return null;
 
     const isGolden = isGoldenUser(user.username);
@@ -174,10 +192,17 @@ export default function ProfilePage() {
                         {isEditing && (
                             <div
                                 className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full cursor-pointer hover:bg-black/50 transition-colors"
-                                onClick={handleRegenerateAvatar}
-                                title="Change Avatar"
+                                onClick={handleCameraClick}
+                                title="Upload Photo"
                             >
                                 <Camera className="text-white w-8 h-8 opacity-80" />
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                />
                             </div>
                         )}
                     </div>

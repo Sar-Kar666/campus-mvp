@@ -268,6 +268,28 @@ export const MockService = {
         return { success: true };
     },
 
+    uploadProfilePicture: async (userId: string, file: File): Promise<{ success: boolean; url?: string; error?: string }> => {
+        if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `avatars/${userId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('user-photos')
+            .upload(fileName, file, { upsert: true });
+
+        if (uploadError) {
+            console.error('Upload error:', uploadError);
+            return { success: false, error: 'Failed to upload image' };
+        }
+
+        const { data } = supabase.storage
+            .from('user-photos')
+            .getPublicUrl(fileName);
+
+        return { success: true, url: data.publicUrl };
+    },
+
     // Deprecated but kept for compatibility if needed, redirects to createPost
     uploadUserPhoto: async (userId: string, file: File, caption?: string): Promise<{ success: boolean; error?: string }> => {
         return MockService.createPost(userId, caption || '', file);
