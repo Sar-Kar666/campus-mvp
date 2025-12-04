@@ -89,8 +89,12 @@ export function FeedPost({ post }: FeedPostProps) {
     };
 
     const handleReply = (comment: any) => {
+        // If replying to a reply, use the PARENT'S id so it stays in the same thread
+        // If replying to a root comment, use that comment's id
+        const parentId = comment.parent_id || comment.id;
+
         setReplyingTo({
-            id: comment.id,
+            id: parentId, // Use the root parent ID
             name: comment.users?.name,
             username: comment.users?.username || 'user'
         });
@@ -211,7 +215,7 @@ export function FeedPost({ post }: FeedPostProps) {
                     <div className="p-3 border-t bg-white">
                         {replyingTo && (
                             <div className="flex justify-between items-center px-2 pb-2 text-xs text-gray-500">
-                                <span>Replying to <b>@{replyingTo.username}</b></span>
+                                <span>Replying to <b>{replyingTo.name}</b> (@{replyingTo.username})</span>
                                 <button onClick={() => { setReplyingTo(null); setNewComment(''); }} className="text-black font-bold">Cancel</button>
                             </div>
                         )}
