@@ -10,8 +10,8 @@ export default function Home() {
   useEffect(() => {
     const checkUser = async () => {
       const user = await MockService.getCurrentUser();
-      if (user) { // Assuming 'user' should remain the condition, not 'session' as in the malformed snippet
-        redirect('/home'); // Changed router.push('/discover') to redirect('/home')
+      if (user) {
+        router.push('/home');
       } else {
         router.push('/onboarding');
       }
