@@ -136,7 +136,7 @@ export default function PublicProfilePage() {
                         <label className="text-sm font-medium text-gray-500">Interests</label>
                         <div className="flex flex-wrap gap-2">
                             {user.interests.map((interest, i) => (
-                                <Badge key={i} variant="secondary">{interest}</Badge>
+                                <Badge key={i} className="bg-gray-900 text-white hover:bg-gray-800">{interest}</Badge>
                             ))}
                             {user.interests.length === 0 && <span className="text-sm text-gray-400">No interests listed</span>}
                         </div>
